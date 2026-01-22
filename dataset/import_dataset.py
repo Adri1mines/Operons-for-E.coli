@@ -13,8 +13,8 @@ with open(JSON_PATH, 'r') as f:
     dic_path = json.load(f)
 # URL de l'index officiel des génomes bactériens RefSeq
 SUMMARY_URL = "https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt"
-FILEPATH_DATA = dic_path["filepath_data"] + f"raw_genome_{TARGET}_species.txt"
-FILEPATH_META = dic_path["filepath_meta"] + f"organism_list.txt"
+FILEPATH_DATA = dic_path["filepath_data"]
+FILEPATH_META = dic_path["filepath_meta"]
 
 
 def main():
@@ -81,20 +81,10 @@ def main():
                             with open(FILEPATH_META, 'a') as f_m:
                                 f_m.write(strain_name + '\n')
                                 
-                                # Optionnel : Tu peux écrire le nom de la souche comme séparateur
-                            f.write(f"\n<START_STRAIN:{strain_name}>\n")
-                                
-                                # On lit le reste du flux ligne par ligne ou par blocs
-                                # copyfileobj est super optimisé pour ça (il lit/écrit par chunks tout seul)
+                            # On lit le reste du flux ligne par ligne ou par blocs
+                            # copyfileobj est super optimisé pour ça (il lit/écrit par chunks tout seul)
                             shutil.copyfileobj(f_in, f)
-                                            # for chunk in r.iter_content(chunk_size=8192):
-                                            #     decompressed_chunk = decompressor.decompress(chunk)                            
-                                            #     decompressed_chunk = decompressed_chunk.decode("utf-8")
-                                            #     if not decompressed_chunk:
-                                            #         continue
-                                            #     print("ADN: " + decompressed_chunk)
-                                            #     f.write(decompressed_chunk)
-                count += 1
+
                 pbar.update(1)
             
             if count >= TARGET:
