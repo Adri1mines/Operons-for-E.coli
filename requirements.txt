@@ -1,0 +1,4 @@
+requests
+gzip
+shutil
+tqdm
