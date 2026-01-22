@@ -1,2 +1,5 @@
-{"data_filepath": "dataset/raw/raw_genome.txt",
- "meta_filepath": "dataset/raw/organism_list.txt"}
+{"data_raw_filepath": "dataset/raw/raw_genome.txt",
+ "meta_filepath": "dataset/raw/organism_list.txt",
+ "data_clean_filepath": "dataset/processed/clean_genome.txt",
+ "min_len_segment": 1024,
+ "separateur": "###"}
