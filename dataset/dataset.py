@@ -1,6 +1,5 @@
 import torch
-from torch.utils.data import Dataset, DataLoader # CORRECTION: DataLoader avec majuscule
-from torch.nn.utils.rnn import pad_sequence # CORRECTION: rnn au lieu de nn
+from torch.utils.data import Dataset
 import json
 import os
 
@@ -12,7 +11,7 @@ with open(JSON_PATH, 'r') as f:
 
 class PretrainDataset(Dataset):
 
-    def __init__(self, clean_genome_path, tokenizer, chunk_size = dic_param["block_size"], stride = dic_param["stride"]):
+    def __init__(self, clean_genome_path = dic_param["data_clean_filepath"], tokenizer = dic_param["tokenizer_filepath"], chunk_size = dic_param["block_size"], stride = dic_param["stride"]):
         self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.clean_genome_path = clean_genome_path
@@ -29,16 +28,20 @@ class PretrainDataset(Dataset):
 
 
     def __getitem__(self, idx):
-
+        
         offset = self.offsets[idx]
         #On read binary parce que l'indice représente l'octet, et on veut éviter un caractère spécial
         #qui viendrait casser l'indexing
-    
-        with open(self.clean_genome_path, 'rb', encoding='utf-8') as f:
-            f.seek(offset)
-            chunk = f.read(self.chunk_size)
+        try:
+            with open(self.clean_genome_path, 'rb', encoding='utf-8') as f:
+                f.seek(offset)
+                chunk = f.read(self.chunk_size)
+        except UnicodeDecodeError as e:
+            print("ERREUR: Le fichier contient des caractères spéciaux non tolérés")
+        except Exception as e:
+            print("Erreur lors du chargement du dataset")
         encoding = self.tokenizer.encode(chunk)
-
+    
         # On récupère les IDs (les nombres)
         ids = encoding.ids
         

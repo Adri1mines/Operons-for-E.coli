@@ -3,5 +3,5 @@
  "data_clean_filepath": "dataset/processed/clean_genome.txt",
  "min_len_segment": 1024,
  "separateur": "###",
- "block_size": 1024,
+ "chunk_size": 1024,
  "stride": 512}
