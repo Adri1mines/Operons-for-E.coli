@@ -1,6 +1,6 @@
+psutils
 requests
-gzip
-shutil
+mgzip
 tqdm
 torch
 tokenizers

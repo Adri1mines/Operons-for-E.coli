@@ -1,8 +1,8 @@
 import os
 import json
 from tokenizers import Tokenizer
-from tokenizers.models import BPE
-from tokenizers.trainers import BpeTrainer
+from tokenizers.models import Unigram
+from tokenizers.trainers import UnigramTrainer
 from tokenizers.pre_tokenizers import Whitespace
 from tokenizers.processors import TemplateProcessing
 
@@ -38,14 +38,16 @@ def main():
     print(f"🏗️  Initialisation du Tokenizer BPE...")
     
     # 1. Création du modèle BPE vide
-    tokenizer = Tokenizer(BPE())
+    tokenizer = Tokenizer(Unigram())
+
+    bases = ["A", "C", "G", "T"]
     
     # 2. Configuration de l'entraîneur
-    trainer = BpeTrainer(
+    trainer = UnigramTrainer(
         vocab_size=VOCAB_SIZE,
         special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"] + dic_token_param["special_codons"]
         + [dic_data_param["separateur"]],
-        initial_alphabet=["A", "C", "G", "T"], # On force l'alphabet de base
+        initial_alphabet= bases + [ b1 + b2 + b3 for b1 in bases for b2 in bases for b3 in bases], # On force l'alphabet de base et les codons
         show_progress = True)
 
     # 3. Entraînement
