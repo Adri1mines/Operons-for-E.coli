@@ -1,0 +1,3 @@
+{"tokenizer_path": "tokenizer/tokenizer.json",
+ "vocab_size": 30000,
+ "special_codons": ["TAA", "TAG", "TGA"]}

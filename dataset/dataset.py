@@ -3,15 +3,20 @@ from torch.utils.data import Dataset
 import json
 import os
 
-JSON_PATH = "dataset/data_parameters.json"
-
-with open(JSON_PATH, 'r') as f:
-    dic_param = json.load(f)
+DATA_PARAM_PATH = "dataset/data_parameters.json"
+TOKENIZER_PARAM_PATH = "tokenizer/tokenizer_param.json"
+with open(DATA_PARAM_PATH, 'r') as f:
+    dic_data_param = json.load(f)
+with open(TOKENIZER_PARAM_PATH, 'r') as f:
+    dic_token_param = json.load(f)
 
 
 class PretrainDataset(Dataset):
 
-    def __init__(self, clean_genome_path = dic_param["data_clean_filepath"], tokenizer = dic_param["tokenizer_filepath"], chunk_size = dic_param["block_size"], stride = dic_param["stride"]):
+    def __init__(self, clean_genome_path = dic_data_param["data_clean_filepath"], 
+                 tokenizer = dic_token_param["tokenizer_filepath"], 
+                 chunk_size = dic_data_param["block_size"], 
+                 stride = dic_data_param["stride"]):
         self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.clean_genome_path = clean_genome_path
@@ -41,9 +46,13 @@ class PretrainDataset(Dataset):
         except Exception as e:
             print("Erreur lors du chargement du dataset")
         encoding = self.tokenizer.encode(chunk)
-    
+        
         # On récupère les IDs (les nombres)
         ids = encoding.ids
+        #on rajoute les tokens de début et fin de séquence
+        cls_id = self.tokenizer.token_to_id("[CLS]")
+        sep_id = self.tokenizer.token_to_id("[SEP]")        
+        ids = [cls_id] + ids + [sep_id]
         
         return torch.tensor(ids, dtype=torch.long)
 
