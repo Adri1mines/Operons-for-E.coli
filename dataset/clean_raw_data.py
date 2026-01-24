@@ -31,8 +31,6 @@ def main():
         raw_chunk = raw_chunk.upper()
         #changer toutes les lettres autres que ACTG en N
         raw_chunk = re.sub(r'[^ATGC N]', 'N', raw_chunk)
-        if " " in raw_chunk:
-            print("DEBUG: espace présent")
         #séparer la séquence sur les gros blocs de N (plus de 10 N)
         raw_chunk_chunk = re.split(r'N{10,}', raw_chunk)
         
@@ -46,18 +44,14 @@ def main():
                     chunk_list[i] = random.choice(['A', 'C', 'G', 'T'])
             
             cleaned_chunk = "".join(chunk_list)
-            total_bp += len(cleaned_chunk)
-            if "#" in cleaned_chunk:
-                print("DEBUG: # présent")            
+            total_bp += len(cleaned_chunk)           
             # 4. Vérification de taille minimale
-            if len(cleaned_chunk) >= min_len:
-                clean_chunks.append(cleaned_chunk)
     total_chunk = len(clean_chunks)
     avg_len = total_bp/total_chunk
     print(f"Nombre de bp: {total_bp} | Nombre de chunk: {total_chunk} | Longueur moyenne chunk {avg_len}" )
     with open(FILEPATH_CLEAN_DATA, 'a') as f:
         for chunk in clean_chunks:
-            f.write(chunk + dic_param["separateur"])
+            f.write(chunk + "[SEP]")
 
 if __name__ == "__main__":
     main()
