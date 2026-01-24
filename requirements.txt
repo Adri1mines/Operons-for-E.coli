@@ -2,3 +2,5 @@ requests
 gzip
 shutil
 tqdm
+torch
+tokenizers
