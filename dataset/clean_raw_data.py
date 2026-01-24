@@ -4,9 +4,9 @@ import re
 import os
 from tqdm import tqdm
 
-JSON_PATH = "dataset/data_parameters.json"
+DATA_PARAM_PATH = "dataset/data_parameters.json"
 
-with open(JSON_PATH, 'r') as f:
+with open(DATA_PARAM_PATH, 'r') as f:
     dic_param = json.load(f)
 
 FILEPATH_RAW_DATA = dic_param["data_raw_filepath"]
@@ -25,10 +25,14 @@ def main():
     for raw_chunk in tqdm(data_raw, desc = "nettoyage", unit = "chunk"):
         #Enlever les retours chariot
         raw_chunk = raw_chunk.replace("\n","")
+        #Enlever les espaces
+        raw_chunk = raw_chunk.replace(" ","")
         #mettre tout en uppercase
         raw_chunk = raw_chunk.upper()
         #changer toutes les lettres autres que ACTG en N
         raw_chunk = re.sub(r'[^ATGC N]', 'N', raw_chunk)
+        if " " in raw_chunk:
+            print("DEBUG: espace présent")
         #séparer la séquence sur les gros blocs de N (plus de 10 N)
         raw_chunk_chunk = re.split(r'N{10,}', raw_chunk)
         
@@ -43,6 +47,8 @@ def main():
             
             cleaned_chunk = "".join(chunk_list)
             total_bp += len(cleaned_chunk)
+            if "#" in cleaned_chunk:
+                print("DEBUG: # présent")            
             # 4. Vérification de taille minimale
             if len(cleaned_chunk) >= min_len:
                 clean_chunks.append(cleaned_chunk)

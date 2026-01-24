@@ -46,9 +46,18 @@ class PretrainDataset(Dataset):
         except Exception as e:
             print("Erreur lors du chargement du dataset")
         encoding = self.tokenizer.encode(chunk)
-        
         # On récupère les IDs (les nombres)
         ids = encoding.ids
+        #gestion du cas ou on retrouve un séparateur de chunk
+        chunk_sep_id = self.tokenizer.token_to_id("###")
+        if chunk_sep_id in ids:
+            #On tronque au niveau du séparateur de chunk, tout ce qu'il y a après on le remplace
+            #par du padding
+            pad_id = self.tokenizer.token_to_id("[PAD]")
+            ids_to_keep = ids[:ids.index(chunk_sep_id)]
+            padding_len = len(ids[ids.index(chunk_sep_id):])
+            padding = [pad_id for _ in range(padding_len)]
+            ids = ids_to_keep + padding
         #on rajoute les tokens de début et fin de séquence
         cls_id = self.tokenizer.token_to_id("[CLS]")
         sep_id = self.tokenizer.token_to_id("[SEP]")        

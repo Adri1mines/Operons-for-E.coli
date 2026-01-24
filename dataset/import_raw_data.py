@@ -6,10 +6,10 @@ import json
 import gzip
 import shutil
 
-JSON_PATH = "dataset/data_parameters.json"
+DATA_PARAM_PATH = "dataset/data_parameters.json"
 TARGET = 100
 
-with open(JSON_PATH, 'r') as f:
+with open(DATA_PARAM_PATH, 'r') as f:
     dic_param = json.load(f)
 # URL de l'index officiel des génomes bactériens RefSeq
 SUMMARY_URL = "https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt"
