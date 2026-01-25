@@ -4,3 +4,6 @@ mgzip
 tqdm
 torch
 tokenizers
+lightning
+wandb
+loguru
