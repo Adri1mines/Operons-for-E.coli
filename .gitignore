@@ -23,7 +23,7 @@ dataset/raw
 #processed data
 dataset/processed
 #wandb log
-.wandb/
+wandb/
 #pycache
 dataset/__pycache__
 model/__pycache__
