@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from math import sqrt
-import torch.nn.Functional as F
+import torch.nn.functional as F
 from tokenizers import Tokenizer
 
 
@@ -37,7 +37,7 @@ class CausalSelfAttention(nn.Module):
 class DNATransformer(nn.Module):
     def __init__(self, vocab_size, d_model,n_head, max_len, tokenizer):
         super().__init__()
-        tokenizer = Tokenizer.load(tokenizer)
+        tokenizer = Tokenizer.from_file(tokenizer)
         self.vocab_size = vocab_size
         self.d_model = d_model
         self.max_len = max_len

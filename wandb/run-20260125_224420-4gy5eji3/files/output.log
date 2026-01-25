@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/home/le_marchand_adrien/Operons-for-E.coli/train.py", line 136, in <module>
+    app.run(main)
+  File "/home/le_marchand_adrien/.local/lib/python3.10/site-packages/absl/app.py", line 316, in run
+    _run_main(main, args)
+  File "/home/le_marchand_adrien/.local/lib/python3.10/site-packages/absl/app.py", line 261, in _run_main
+    sys.exit(main(argv))
+  File "/home/le_marchand_adrien/Operons-for-E.coli/train.py", line 111, in main
+    "architecture": parameters["model"]["type"],
+KeyError: 'model'
+Traceback (most recent call last):
+  File "/home/le_marchand_adrien/Operons-for-E.coli/train.py", line 136, in <module>
+    app.run(main)
+  File "/home/le_marchand_adrien/.local/lib/python3.10/site-packages/absl/app.py", line 316, in run
+    _run_main(main, args)
+  File "/home/le_marchand_adrien/.local/lib/python3.10/site-packages/absl/app.py", line 261, in _run_main
+    sys.exit(main(argv))
+  File "/home/le_marchand_adrien/Operons-for-E.coli/train.py", line 111, in main
+    "architecture": parameters["model"]["type"],
+KeyError: 'model'

@@ -1,0 +1,11 @@
+{"time":"2026-01-25T23:11:36.6109302Z","level":"INFO","msg":"stream: starting","core version":"0.24.0"}
+{"time":"2026-01-25T23:11:36.794617313Z","level":"INFO","msg":"stream: created new stream","id":"ohprw60l"}
+{"time":"2026-01-25T23:11:36.794698672Z","level":"INFO","msg":"handler: started","stream_id":"ohprw60l"}
+{"time":"2026-01-25T23:11:36.794804682Z","level":"INFO","msg":"stream: started","id":"ohprw60l"}
+{"time":"2026-01-25T23:11:36.794839731Z","level":"INFO","msg":"writer: started","stream_id":"ohprw60l"}
+{"time":"2026-01-25T23:11:36.794844612Z","level":"INFO","msg":"sender: started","stream_id":"ohprw60l"}
+{"time":"2026-01-25T23:11:37.99596889Z","level":"INFO","msg":"stream: closing","id":"ohprw60l"}
+{"time":"2026-01-25T23:11:38.354998242Z","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-01-25T23:11:38.63744615Z","level":"INFO","msg":"handler: closed","stream_id":"ohprw60l"}
+{"time":"2026-01-25T23:11:38.637589129Z","level":"INFO","msg":"sender: closed","stream_id":"ohprw60l"}
+{"time":"2026-01-25T23:11:38.637606992Z","level":"INFO","msg":"stream: closed","id":"ohprw60l"}
