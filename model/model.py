@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
-import lightning as pl
 from math import sqrt
 import torch.nn.Functional as F
+from tokenizers import Tokenizer
+
+
 
 class CausalSelfAttention(nn.Module):
 
@@ -32,9 +34,10 @@ class CausalSelfAttention(nn.Module):
         return att
 
 
-class DNATransformer(pl.LightningModule):
+class DNATransformer(nn.Module):
     def __init__(self, vocab_size, d_model,n_head, max_len, tokenizer):
         super().__init__()
+        tokenizer = Tokenizer.load(tokenizer)
         self.vocab_size = vocab_size
         self.d_model = d_model
         self.max_len = max_len
@@ -62,20 +65,6 @@ class DNATransformer(pl.LightningModule):
         emb = emb + feed_forwarded
         logits = self.proj(emb)
         return logits
-    
-    def training_step(self, batch, _):
-
-        x = batch
-        input = x[:, :-1]
-        target = x[:, 1:]
-        logits = self.forward(input)
-        loss = F.cross_entropy(logits.view(-1, self.vocab_size), target.view(-1))
-        self.log("train_loss", loss, prog_bar = True)
-        return loss
-    
-    def configure_optimizers(self):
-        optimiser = torch.optim.AdamW(self.parameters(), lr = 1e-3)
-        return optimiser
 
 
 
