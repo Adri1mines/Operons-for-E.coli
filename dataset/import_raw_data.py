@@ -6,7 +6,7 @@ import json
 import gzip
 import shutil
 
-CONFIG_PATH = "dataset/data_parameters.json"
+CONFIG_PATH = "config.json"
 TARGET = 100
 
 with open(CONFIG_PATH, 'r') as f:

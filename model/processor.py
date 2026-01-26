@@ -47,10 +47,8 @@ class DNAProcessor(pl.LightningModule):
         target = x[:, 1:]
         logits = self.model(input)
         loss = self.loss(logits.view(-1, logits.size(-1)), target.view(-1))
-=======
+
         loss = self.loss(logits.reshape(-1, logits.size(-1)), target.reshape(-1))
-        # Important : le nom ici "val_loss" doit correspondre au monitor du checkpoint
->>>>>>> 5c11b32053781d3bf2cceda28369d13d12c62cee
         self.log("val_loss", loss, prog_bar=True)
         return loss
     def on_save_checkpoint(self, checkpoint):

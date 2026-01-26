@@ -8,20 +8,17 @@ from tokenizers.processors import TemplateProcessing
 
 
 
-DATA_PARAM_PATH = "dataset/data_parameters.json"
-TOKENIZER_PARAM_PATH = "tokenizer/tokenizer_param.json"
-with open(DATA_PARAM_PATH, 'r') as f:
-    dic_data_param = json.load(f)
-with open(TOKENIZER_PARAM_PATH, 'r') as f:
-    dic_token_param = json.load(f)
+CONFIG_PATH = "config.json"
+with open(CONFIG_PATH, 'r') as f:
+    config_param = json.load(f)
 
-TOKENIZER_PATH = dic_token_param["tokenizer_path"]
-CLEAN_GENOME_PATH = dic_data_param["data_clean_filepath"]
-VOCAB_SIZE = dic_token_param["vocab_size"]
+TOKENIZER_PATH = config_param["tokenizer"]["tokenizer_path"]
+CLEAN_GENOME_PATH = config_param["data"]["data_clean_filepath"]
+VOCAB_SIZE = config_param["tokenizer"]["vocab_size"]
 
 
 #On ne peut pas charger en mémoire tout le dataset donc on utilise un itérateur
-def training_iterator_sampled(train_set_filepath, chunk_size = 10000, max_chunks = dic_token_param["chunks_trained_on"]):
+def training_iterator_sampled(train_set_filepath, chunk_size = 10000, max_chunks = config_param["tokenizer"]["chunks_trained_on"]):
     with open(train_set_filepath, 'r') as f:
         count = 0
         while True and count < max_chunks:
@@ -45,8 +42,8 @@ def main():
     # 2. Configuration de l'entraîneur
     trainer = UnigramTrainer(
         vocab_size=VOCAB_SIZE,
-        special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"] + dic_token_param["special_codons"]
-        + [dic_data_param["separateur"]],
+        special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"] + config_param["tokenizer"]["special_codons"]
+        + [config_param["separateur"]],
         initial_alphabet= bases + [ b1 + b2 + b3 for b1 in bases for b2 in bases for b3 in bases], # On force l'alphabet de base et les codons
         show_progress = True)
 
