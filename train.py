@@ -69,7 +69,7 @@ def main(argv):
 
     full_dataset = PretrainDataset()
 
-    val_size = int(config_param["val_dataset_size"]*len(full_dataset))
+    val_size = int(config_param["data"]["val_dataset_size"]*len(full_dataset))
     train_size = len(full_dataset)-val_size
 
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
@@ -106,15 +106,16 @@ def main(argv):
         checkpoint_callback = ModelCheckpoint(dirpath="checkpoints")
     lr_monitor = LearningRateMonitor(logging_interval="step")
 
-    # wandb_logger.experiment.config.update(
-    #     {
-    #         "architecture": parameters["model"]["type"],
-    #         "#_layers": parameters["model"]["message_passing_num"],
-    #         "#_neurons": parameters["model"]["hidden_size"],
-    #         "max_lr": initial_lr,
-    #         "batch_size": batch_size,
-    #     }
-    # )
+    wandb_logger.experiment.config.update(
+        {
+            "architecture": config_param["model"]["type"],
+            "d_model": config_param["model"]["d_model"],
+            "n_head": config_param["model"]["n_head"],
+            "context_size": config_param["model"]["max_len"],
+            "max_lr": initial_lr,
+            "batch_size": batch_size,
+        }
+    )
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
         callbacks=[checkpoint_callback, lr_monitor], # Connecte la sauvegarde et le moniteur de LR
