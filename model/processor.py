@@ -45,9 +45,13 @@ class DNAProcessor(pl.LightningModule):
         target = x[:, 1:]
         logits = self.model(input)
         loss = self.loss(logits.view(-1, logits.size(-1)), target.view(-1))
-        # Important : le nom ici "val_loss" doit correspondre au monitor du checkpoint
         self.log("val_loss", loss, prog_bar=True)
         return loss
+    def on_save_checkpoint(self, checkpoint):
+        checkpoint["wandb_run_id"] = self.wandb_run_id
+
+    def on_load_checkpoint(self, checkpoint):
+        self.wandb_run_id = checkpoint.get("wandb_run_id")
 
     def configure_optimizers(self):
         return torch.optim.AdamW(self.model.parameters(), lr=1e-3)

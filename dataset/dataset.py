@@ -3,20 +3,17 @@ from torch.utils.data import Dataset
 import json
 import os
 
-DATA_PARAM_PATH = "dataset/data_parameters.json"
-TOKENIZER_PARAM_PATH = "tokenizer/tokenizer_param.json"
-with open(DATA_PARAM_PATH, 'r') as f:
-    dic_data_param = json.load(f)
-with open(TOKENIZER_PARAM_PATH, 'r') as f:
-    dic_token_param = json.load(f)
+CONFIG_PATH = "config.json"
+with open(CONFIG_PATH, 'r') as f:
+    config_param = json.load(f)
 
 
 class PretrainDataset(Dataset):
 
-    def __init__(self, clean_genome_path = dic_data_param["data_clean_filepath"], 
-                 tokenizer = dic_token_param["tokenizer_filepath"], 
-                 chunk_size = dic_data_param["block_size"], 
-                 stride = dic_data_param["stride"]):
+    def __init__(self, clean_genome_path = config_param["data"]["data_clean_filepath"], 
+                 tokenizer = config_param["tokenizer"]["tokenizer_filepath"], 
+                 chunk_size = config_param["data"]["chunk_size"], 
+                 stride = config_param["data"]["stride"]):
         self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.clean_genome_path = clean_genome_path

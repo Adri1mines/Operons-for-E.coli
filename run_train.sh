@@ -3,7 +3,7 @@
 echo "Lancement de l'entraînement du DNA Transformer..."
 
 
-python main.py \
+python train.py \
     --project_name="Operons for E.coli" \
     --training_parameters_path="training_params.json" \
     --num_epochs=20 \

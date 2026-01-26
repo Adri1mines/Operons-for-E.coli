@@ -4,21 +4,21 @@ import re
 import os
 from tqdm import tqdm
 
-DATA_PARAM_PATH = "dataset/data_parameters.json"
+CONFIG_PATH = "config.json"
 
-with open(DATA_PARAM_PATH, 'r') as f:
-    dic_param = json.load(f)
+with open(CONFIG_PATH, 'r') as f:
+    config_param = json.load(f)
 
-FILEPATH_RAW_DATA = dic_param["data_raw_filepath"]
-FILEPATH_CLEAN_DATA = dic_param["data_clean_filepath"]
-min_len = dic_param["min_len_segment"]
+FILEPATH_RAW_DATA = config_param["model"]["data_raw_filepath"]
+FILEPATH_CLEAN_DATA = config_param["model"]["data_clean_filepath"]
+min_len = config_param["model"]["min_len_segment"]
 
 def main():
     print("Nettoyage en cours...")
     if os.path.exists(FILEPATH_CLEAN_DATA):
         os.remove(FILEPATH_CLEAN_DATA)
     with open(FILEPATH_RAW_DATA, 'r') as f:
-        data_raw = f.read().split(dic_param["separateur"])
+        data_raw = f.read().split(config_param["model"]["separateur"])
 
     clean_chunks = []
     total_bp = 0

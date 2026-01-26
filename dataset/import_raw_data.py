@@ -6,15 +6,15 @@ import json
 import gzip
 import shutil
 
-DATA_PARAM_PATH = "dataset/data_parameters.json"
+CONFIG_PATH = "dataset/data_parameters.json"
 TARGET = 100
 
-with open(DATA_PARAM_PATH, 'r') as f:
-    dic_param = json.load(f)
+with open(CONFIG_PATH, 'r') as f:
+    config_param = json.load(f)
 # URL de l'index officiel des génomes bactériens RefSeq
 SUMMARY_URL = "https://ftp.ncbi.nlm.nih.gov/genomes/refseq/bacteria/assembly_summary.txt"
-FILEPATH_DATA = dic_param["data_raw_filepath"]
-FILEPATH_META = dic_param["meta_filepath"]
+FILEPATH_DATA = config_param["data"]["data_raw_filepath"]
+FILEPATH_META = config_param["data"]["meta_filepath"]
 
 
 def main():
@@ -84,7 +84,7 @@ def main():
                             # On lit le reste du flux ligne par ligne ou par blocs
                             # copyfileobj est super optimisé pour ça (il lit/écrit par chunks tout seul)
                             shutil.copyfileobj(f_in, f)
-                            f.write(dic_param["separateur"])
+                            f.write(config_param["data"]["separateur"])
 
                 pbar.update(1)
                 count += 1

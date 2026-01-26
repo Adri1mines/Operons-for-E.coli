@@ -34,22 +34,22 @@ flags.DEFINE_bool(
     "resume_training", False, "Whether to resume an unfinished training or not"
 )
 flags.DEFINE_string(
-    "training_parameters_path", None, "Path to the training parameters JSON file"
+    "config_path", None, "Path to the training parameters JSON file"
 )
 
 def main(argv):
     del argv
 
     # Check that the training parameters path is provided
-    if not FLAGS.training_parameters_path:
+    if not FLAGS.config_path:
         raise ValueError("The 'training_parameters_path' flag must be provided.")
 
     # Load training parameters from JSON file
-    training_parameters_path = FLAGS.training_parameters_path
-    logger.info(f"Opening training parameters from {training_parameters_path}")
+    config_path = FLAGS.config_path
+    logger.info(f"Opening training parameters from {config_path}")
     try:
-        with open(training_parameters_path, "r") as fp:
-            parameters = json.load(fp)
+        with open(config_path, "r") as fp:
+            config_param = json.load(fp)
     except Exception as e:
         logger.error(f"Error reading training parameters: {e}")
         return
@@ -69,7 +69,7 @@ def main(argv):
 
     full_dataset = PretrainDataset()
 
-    val_size = int(parameters["val_dataset_size"]*len(full_dataset))
+    val_size = int(config_param["val_dataset_size"]*len(full_dataset))
     train_size = len(full_dataset)-val_size
 
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
@@ -81,12 +81,12 @@ def main(argv):
         logger.info(f"Loading model from checkpoint: {model_path}")
         lightning_module = DNATransformer.load_from_checkpoint(
             checkpoint_path=model_path,
-            training_params=parameters,
+            training_params=config_param,
         )
         logger.info(f"Resuming WandB run: {lightning_module.wandb_run_id}")
     else:
         logger.info("Initializing new model")
-        lightning_module = DNATransformer(training_params=parameters)
+        lightning_module = DNATransformer(training_params=config_param)
 
     # Initialize WandbLogger
     if resume_training:
@@ -108,9 +108,9 @@ def main(argv):
 
     wandb_logger.experiment.config.update(
         {
-            "architecture": parameters["model"]["type"],
-            "#_layers": parameters["model"]["message_passing_num"],
-            "#_neurons": parameters["model"]["hidden_size"],
+            "architecture": config_param["model"]["type"],
+            "#_layers": config_param["model"]["message_passing_num"],
+            "#_neurons": config_param["model"]["hidden_size"],
             "max_lr": initial_lr,
             "batch_size": batch_size,
         }
