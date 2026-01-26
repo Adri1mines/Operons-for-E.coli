@@ -3,18 +3,23 @@ import lightning as pl
 import torch
 import torch.nn.functional as F
 import json
-from model.model import DNATransformer
+from model import DNATransformer
 
-MODEL_PARAM_PATH = "model/model_param.json"
+CONFIG_PATH = "config.json"
 
-with open(MODEL_PARAM_PATH, 'r') as fp:
-    model_param = json.load(fp)
+with open(CONFIG_PATH, 'r') as fp:
+    config_param = json.load(fp)
+
+model_param = config_param["model"]
 
 class DNAProcessor(pl.LightningModule):
 
     def __init__(self, training_params):
         super().__init__()
         self.save_hyperparameters()
+        if os.path.isfile(training_params):
+            with open(training_params, 'r') as fp:
+                training_params = json.load(fp)
         self.model = DNATransformer(vocab_size = model_param["vocab_size"]
                                     ,d_model = model_param["d_model"]
                                     ,n_head = model_param["n_head"]
@@ -32,7 +37,7 @@ class DNAProcessor(pl.LightningModule):
         input = x[:, :-1]
         target = x[:, 1:]
         logits = self.model(input) # On appelle le modèle interne
-        loss = self.loss(logits.reshape(-1, logits.size(-1)), target.reshape(-1))
+        loss = self.loss(logits.view(-1, logits.size(-1)), target.view(-1))
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         return loss
     
@@ -41,7 +46,6 @@ class DNAProcessor(pl.LightningModule):
         input = x[:, :-1]
         target = x[:, 1:]
         logits = self.model(input)
-<<<<<<< HEAD
         loss = self.loss(logits.view(-1, logits.size(-1)), target.view(-1))
 =======
         loss = self.loss(logits.reshape(-1, logits.size(-1)), target.reshape(-1))
