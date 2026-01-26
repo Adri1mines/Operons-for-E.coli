@@ -9,17 +9,16 @@ CONFIG_PATH = "config.json"
 with open(CONFIG_PATH, 'r') as f:
     config_param = json.load(f)
 
-FILEPATH_RAW_DATA = config_param["model"]["data_raw_filepath"]
-FILEPATH_CLEAN_DATA = config_param["model"]["data_clean_filepath"]
-min_len = config_param["model"]["min_len_segment"]
+FILEPATH_RAW_DATA = config_param["data"]["data_raw_filepath"]
+FILEPATH_CLEAN_DATA = config_param["data"]["data_clean_filepath"]
+min_len = config_param["data"]["min_len_segment"]
 
 def main():
     print("Nettoyage en cours...")
     if os.path.exists(FILEPATH_CLEAN_DATA):
         os.remove(FILEPATH_CLEAN_DATA)
     with open(FILEPATH_RAW_DATA, 'r') as f:
-        data_raw = f.read().split(config_param["model"]["separateur"])
-
+        data_raw = f.read().split(config_param["data"]["separateur"])
     clean_chunks = []
     total_bp = 0
     for raw_chunk in tqdm(data_raw, desc = "nettoyage", unit = "chunk"):
@@ -43,16 +42,17 @@ def main():
                 if char == 'N':
                     #On remplace les N restants par un acide nucléique random
                     chunk_list[i] = random.choice(['A', 'C', 'G', 'T'])
-            
             cleaned_chunk = "".join(chunk_list)
-            total_bp += len(cleaned_chunk)           
+            total_bp += len(cleaned_chunk)
+            if len(cleaned_chunk) >= min_len:
+                clean_chunks.append(cleaned_chunk)           
             # 4. Vérification de taille minimale
     total_chunk = len(clean_chunks)
     avg_len = total_bp/total_chunk
     print(f"Nombre de bp: {total_bp} | Nombre de chunk: {total_chunk} | Longueur moyenne chunk {avg_len}" )
     with open(FILEPATH_CLEAN_DATA, 'a') as f:
         for chunk in clean_chunks:
-            f.write(chunk + "[SEP]")
+            f.write(chunk + "###")
 
 if __name__ == "__main__":
     main()
