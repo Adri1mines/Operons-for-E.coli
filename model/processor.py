@@ -3,7 +3,7 @@ import lightning as pl
 import torch
 import torch.nn.functional as F
 import json
-from model import DNATransformer
+from model.model import DNATransformer
 
 CONFIG_PATH = "config.json"
 
@@ -15,15 +15,12 @@ class DNAProcessor(pl.LightningModule):
     def __init__(self, training_params = config_param):
         super().__init__()
         self.save_hyperparameters()
-        if os.path.isfile(training_params):
-            with open(training_params, 'r') as fp:
-                training_params = json.load(fp)
-        self.model = DNATransformer(vocab_size = training_params["tokenizer"]["vocab_size"]
-                                    ,d_model = training_params["model"]["d_model"]
-                                    ,n_head = training_params["model"]["n_head"]
-                                    ,max_len = training_params["model"]["max_len"]
-                                    ,tokenizer = training_params["model"]["tokenizer"])
-        self.params = training_params
+        self.model = DNATransformer(vocab_size = config_param["tokenizer"]["vocab_size"]
+                                    ,d_model = config_param["model"]["d_model"]
+                                    ,n_head = config_param["model"]["n_head"]
+                                    ,max_len = config_param["model"]["max_len"]
+                                    ,tokenizer = config_param["tokenizer"]["tokenizer_filepath"])
+        self.params = config_param
         self.loss = F.cross_entropy
         self.wandb_run_id = None
 

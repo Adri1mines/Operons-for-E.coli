@@ -79,14 +79,11 @@ def main(argv):
 
     if model_path and os.path.isfile(model_path):
         logger.info(f"Loading model from checkpoint: {model_path}")
-        lightning_module = DNAProcessor.load_from_checkpoint(
-            checkpoint_path=model_path,
-            training_params=config_param,
-        )
+        lightning_module = DNAProcessor.load_from_checkpoint(checkpoint_path=model_path)
         logger.info(f"Resuming WandB run: {lightning_module.wandb_run_id}")
     else:
         logger.info("Initializing new model")
-        lightning_module = DNAProcessor(training_params=config_param)
+        lightning_module = DNAProcessor()
 
     # Initialize WandbLogger
     if resume_training:

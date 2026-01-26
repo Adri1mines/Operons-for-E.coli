@@ -25,6 +25,7 @@ def main():
     for raw_chunk in tqdm(data_raw, desc = "nettoyage", unit = "chunk"):
         #Enlever les retours chariot
         raw_chunk = raw_chunk.replace("\n","")
+        raw_chunk = raw_chunk.replace("\r","")        
         #Enlever les espaces
         raw_chunk = raw_chunk.replace(" ","")
         #mettre tout en uppercase
