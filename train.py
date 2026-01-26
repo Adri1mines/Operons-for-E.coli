@@ -1,6 +1,6 @@
 import os
-from model.model import DNATransformer
 from dataset.dataset import PretrainDataset
+from model.processor import DNAProcessor
 import torch
 from torch.utils.data import DataLoader, Dataset, random_split
 import wandb
@@ -79,14 +79,14 @@ def main(argv):
 
     if model_path and os.path.isfile(model_path):
         logger.info(f"Loading model from checkpoint: {model_path}")
-        lightning_module = DNATransformer.load_from_checkpoint(
+        lightning_module = DNAProcessor.load_from_checkpoint(
             checkpoint_path=model_path,
             training_params=config_param,
         )
         logger.info(f"Resuming WandB run: {lightning_module.wandb_run_id}")
     else:
         logger.info("Initializing new model")
-        lightning_module = DNATransformer(training_params=config_param)
+        lightning_module = DNAProcessor(training_params=config_param)
 
     # Initialize WandbLogger
     if resume_training:
@@ -106,15 +106,15 @@ def main(argv):
         checkpoint_callback = ModelCheckpoint(dirpath="checkpoints")
     lr_monitor = LearningRateMonitor(logging_interval="step")
 
-    wandb_logger.experiment.config.update(
-        {
-            "architecture": config_param["model"]["type"],
-            "#_layers": config_param["model"]["message_passing_num"],
-            "#_neurons": config_param["model"]["hidden_size"],
-            "max_lr": initial_lr,
-            "batch_size": batch_size,
-        }
-    )
+    # wandb_logger.experiment.config.update(
+    #     {
+    #         "architecture": parameters["model"]["type"],
+    #         "#_layers": parameters["model"]["message_passing_num"],
+    #         "#_neurons": parameters["model"]["hidden_size"],
+    #         "max_lr": initial_lr,
+    #         "batch_size": batch_size,
+    #     }
+    # )
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
         callbacks=[checkpoint_callback, lr_monitor], # Connecte la sauvegarde et le moniteur de LR
@@ -131,6 +131,9 @@ def main(argv):
         val_dataloaders=val_dataloader,
         ckpt_path=model_path if resume_training else None # Gère la reprise automatique
     )
+
+if __name__ == "__main__":
+    app.run(main)
 
 
 

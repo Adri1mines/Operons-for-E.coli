@@ -2,6 +2,7 @@ import torch
 from torch.utils.data import Dataset
 import json
 import os
+from tokenizers import Tokenizer
 
 CONFIG_PATH = "config.json"
 with open(CONFIG_PATH, 'r') as f:
@@ -13,8 +14,16 @@ class PretrainDataset(Dataset):
     def __init__(self, clean_genome_path = config_param["data"]["data_clean_filepath"], 
                  tokenizer = config_param["tokenizer"]["tokenizer_filepath"], 
                  chunk_size = config_param["data"]["chunk_size"], 
-                 stride = config_param["data"]["stride"]):
-        self.tokenizer = tokenizer
+                 stride = config_param["data"]["stride"],
+                 max_len = 1000):
+        self.tokenizer = Tokenizer.from_file(tokenizer)
+        self.tokenizer.enable_padding(
+            direction='right', 
+            pad_id=0, 
+            pad_token="[PAD]", 
+            length=max_len
+        )
+        self.tokenizer.enable_truncation(max_length=max_len)
         self.chunk_size = chunk_size
         self.clean_genome_path = clean_genome_path
         self.offsets = []
@@ -35,7 +44,7 @@ class PretrainDataset(Dataset):
         #On read binary parce que l'indice représente l'octet, et on veut éviter un caractère spécial
         #qui viendrait casser l'indexing
         try:
-            with open(self.clean_genome_path, 'rb', encoding='utf-8') as f:
+            with open(self.clean_genome_path, 'r', encoding='utf-8') as f:#!!! NE MARCHE PAS EN BINARY POURQUOI????
                 f.seek(offset)
                 chunk = f.read(self.chunk_size)
         except UnicodeDecodeError as e:
