@@ -37,7 +37,7 @@ class DNAProcessor(pl.LightningModule):
         input = x[:, :-1]
         target = x[:, 1:]
         logits = self.model(input) # On appelle le modèle interne
-        loss = self.loss(logits.view(-1, logits.size(-1)), target.view(-1))
+        loss = self.loss(logits.reshape(-1, logits.size(-1)), target.reshape(-1))
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         return loss
     
@@ -46,7 +46,7 @@ class DNAProcessor(pl.LightningModule):
         input = x[:, :-1]
         target = x[:, 1:]
         logits = self.model(input)
-        loss = self.loss(logits.view(-1, logits.size(-1)), target.view(-1))
+        loss = self.loss(logits.reshape(-1, logits.size(-1)), target.reshape(-1))
 
         loss = self.loss(logits.reshape(-1, logits.size(-1)), target.reshape(-1))
         self.log("val_loss", loss, prog_bar=True)
