@@ -8,7 +8,6 @@ from tokenizers import Tokenizer
 class DNATransformer(nn.Module):
     def __init__(self, vocab_size, d_model,n_head, max_len, num_layers):
         super().__init__()
-        tokenizer = Tokenizer.from_file(tokenizer)
         self.vocab_size = vocab_size
         self.d_model = d_model
         self.max_len = max_len

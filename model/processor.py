@@ -1,7 +1,7 @@
 import os
 import lightning as pl
 import torch
-import torch.nn.functional as F
+import torch.nn as nn
 import json
 from model.model import DNATransformer
 from tokenizers import Tokenizer
@@ -16,16 +16,16 @@ class DNAProcessor(pl.LightningModule):
     def __init__(self, training_params = config_param):
         super().__init__()
         self.save_hyperparameters()
-        self.model = DNATransformer(vocab_size = config_param["tokenizer"]["vocab_size"]
-                                    ,d_model = config_param["model"]["d_model"]
-                                    ,n_head = config_param["model"]["n_head"]
-                                    ,max_len = config_param["model"]["max_len"]
-                                    ,num_layers = config_param["model"]["num_layers"])
-        self.params = config_param
+        self.model = DNATransformer(vocab_size = training_params["tokenizer"]["vocab_size"]
+                                    ,d_model = training_params["model"]["d_model"]
+                                    ,n_head = training_params["model"]["n_head"]
+                                    ,max_len = training_params["model"]["max_len"]
+                                    ,num_layers = training_params["model"]["num_layers"])
+        self.params = training_params
+        self.tokenizer = Tokenizer.from_file(training_params["tokenizer"]["tokenizer_filepath"])
         self.wandb_run_id = None
-        self.tokenizer = Tokenizer.from_file(config_param["tokenizer"]["tokenizer_filepath"])
         self.pad_token = self.tokenizer.token_to_id("[PAD]")
-        self.loss = F.cross_entropy(ignore_index = self.pad_token)
+        self.loss = nn.CrossEntropyLoss(ignore_index = self.pad_token)
 
     def forward (self, x):
         return self.model(x)
@@ -42,7 +42,7 @@ class DNAProcessor(pl.LightningModule):
     def generate_sequences(self, n_sequence = 1, max_len = 1024, temp = 0.7, prompt = ""):
         self.model.eval()
         device = self.device
-        input = self.tokenizer.encode("[CLS]" + prompt)
+        input = self.tokenizer.encode("[CLS]" + prompt).ids
         seqs = torch.tensor([input]*n_sequence, device = device)
         len = seqs.size(1)
         while len < max_len:

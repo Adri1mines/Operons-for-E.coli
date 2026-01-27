@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, Subset
 # Ajuste les chemins selon ta structure de dossiers
 from model.processor import DNAProcessor 
 from dataset.dataset import PretrainDataset
-from callbacks.bio_eval import BioEvalCallback
+from callbacks.bio_test import BioEvalCallback
 
 # --- MOCK CLASSES (Pour simuler WandB sans le lancer) ---
 class MockLogger:
@@ -51,7 +51,7 @@ def test_everything():
 
     # 2. Chargement du modèle
     try:
-        model = DNAProcessor(config)
+        model = DNAProcessor()
         model.eval() # Important
         print("✅ Modèle chargé avec succès.")
     except Exception as e:
@@ -63,13 +63,7 @@ def test_everything():
     clean_genome_path = "dataset/processed/clean_genome.txt" # <--- METS TON CHEMIN ICI
     
     try:
-        full_dataset = PretrainDataset(
-            clean_genome_path=clean_genome_path,
-            tokenizer_path=config["tokenizer"]["tokenizer_filepath"],
-            chunk_size_read = 1024
-            stride=512,
-            max_len=128
-        )
+        full_dataset = PretrainDataset()
         # On ne garde que 50 exemples pour que les calculs de stats soient instantanés
         mini_dataset = Subset(full_dataset, range(min(50, len(full_dataset))))
         # Hack pour que le callback accède au tokenizer via le subset
@@ -81,7 +75,7 @@ def test_everything():
 
     print("\n=== 2. TEST DE GÉNÉRATION (generate_sequences) ===")
     try:
-        sequences = model.generate_sequences(num_sequences=3, max_length=50)
+        sequences = model.generate_sequences(n_sequence=3, max_len=50)
         print("Sortie brute du modèle (non entraîné, donc charabia attendu) :")
         for i, seq in enumerate(sequences):
             print(f"  Seq {i+1}: {seq}")

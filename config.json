@@ -1,21 +1,25 @@
-{"data": 
- {"data_raw_filepath": "dataset/raw/raw_genome.txt",
- "meta_filepath": "dataset/raw/organism_list.txt",
- "data_clean_filepath": "dataset/processed/clean_genome.txt",
- "min_len_segment": 1024,
- "separateur": "###",
- "chunk_size_read": 6000,
- "stride": 3000,
- "val_dataset_size": 0.1},
- "tokenizer":
- {"tokenizer_filepath": "tokenizer/tokenizer.json",
- "vocab_size": 1024,
- "special_codons": ["TAA", "TAG", "TGA"],
- "chunks_trained_on": 10000},
- "model":
- {
- "type": "Transformer",
- "d_model": 256,
- "n_head": 8,
- "max_len": 1024,
- "num_layers": 1}}
+{"data":{
+    "data_raw_filepath": "dataset/raw/raw_genome.txt",
+    "meta_filepath": "dataset/raw/organism_list.txt",
+    "data_clean_filepath": "dataset/processed/clean_genome.txt",
+    "min_len_segment": 1024,
+    "separateur": "###",
+    "chunk_size_read": 6000,
+    "stride": 3000,
+    "val_dataset_size": 0.1},
+ "tokenizer":{
+    "tokenizer_filepath": "tokenizer/tokenizer.json",
+    "vocab_size": 1024,
+    "special_codons": ["TAA", "TAG", "TGA"],
+    "chunks_trained_on": 10000},
+ "model":{
+    "type": "Transformer",
+    "d_model": 256,
+    "n_head": 8,
+    "max_len": 1024,
+    "num_layers": 1},
+ "training":{
+    "learning_rate": 1e-3,
+    "weight_decay": 1e-2
+
+ }}
