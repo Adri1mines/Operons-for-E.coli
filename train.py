@@ -17,6 +17,7 @@ torch.multiprocessing.set_sharing_strategy("file_system")
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string("project_name", "my_project", "Name of the WandB project")
+flags.DEFINE_string("wandb_team_name", "my_team", "Name of the team")
 flags.DEFINE_integer("num_epochs", 10, "Number of epochs")
 flags.DEFINE_integer("seed", 42, "Random seed")
 flags.DEFINE_float("init_lr", 0.001, "Initial learning rate")
@@ -66,6 +67,7 @@ def main(argv):
     model_save_name = FLAGS.model_save_name
     model_path = FLAGS.model_path
     resume_training = FLAGS.resume_training
+    wandb_team_name = "adrien-le_marchand-mines-paris-alumni"
 
     full_dataset = PretrainDataset()
 
@@ -88,10 +90,10 @@ def main(argv):
     # Initialize WandbLogger
     if resume_training:
         wandb_run = wandb.init(
-            project=wandb_project_name, id=lightning_module.wandb_run_id, resume="allow"
+            project=wandb_project_name, entity = wandb_team_name, id=lightning_module.wandb_run_id, resume="allow"
         )
     else:
-        wandb_run = wandb.init(project=wandb_project_name)
+        wandb_run = wandb.init(project=wandb_project_name, entity = wandb_team_name)
 
     wandb_logger = WandbLogger(experiment=wandb_run)
     lightning_module.wandb_run_id = wandb_logger.experiment.id
