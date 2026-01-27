@@ -27,3 +27,7 @@ wandb/
 #pycache
 dataset/__pycache__
 model/__pycache__
+#checkpoints
+checkpoints/
+#nohup log
+nohup.out

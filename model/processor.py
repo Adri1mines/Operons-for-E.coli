@@ -4,6 +4,7 @@ import torch
 import torch.nn.functional as F
 import json
 from model.model import DNATransformer
+from tokenizers import Tokenizer
 
 CONFIG_PATH = "config.json"
 
@@ -19,10 +20,12 @@ class DNAProcessor(pl.LightningModule):
                                     ,d_model = config_param["model"]["d_model"]
                                     ,n_head = config_param["model"]["n_head"]
                                     ,max_len = config_param["model"]["max_len"]
-                                    ,tokenizer = config_param["tokenizer"]["tokenizer_filepath"])
+                                    ,num_layers = config_param["model"]["num_layers"])
         self.params = config_param
-        self.loss = F.cross_entropy
         self.wandb_run_id = None
+        self.tokenizer = Tokenizer.from_file(config_param["tokenizer"]["tokenizer_filepath"])
+        self.pad_token = self.tokenizer.token_to_id("[PAD]")
+        self.loss = F.cross_entropy(ignore_index = self.pad_token)
 
     def forward (self, x):
         return self.model(x)
@@ -53,5 +56,28 @@ class DNAProcessor(pl.LightningModule):
         self.wandb_run_id = checkpoint.get("wandb_run_id")
 
     def configure_optimizers(self):
-        return torch.optim.AdamW(self.model.parameters(), lr=1e-3)
+
+        optimizer = torch.optim.AdamW(self.model.parameters(),
+                                        lr=config_param["training"]["learning_rate"], 
+                                        weight_decay = config_param["training"]["weight_decay"])
+        total_steps = self.trainer.estimated_stepping_batches
+
+        scheduler = torch.optim.lr_scheduler.OneCycleLR(
+            optimizer,
+            max_lr=self.params["training"]["learning_rate"],
+            total_steps=total_steps,
+            pct_start=0.1,  # 10% du temps en Warmup (montée), 90% en descente
+            div_factor=25,  # Le LR de départ sera max_lr / 25
+            final_div_factor=1000 # Le LR final sera minime
+            )
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "step", # IMPORTANT : On met à jour à chaque BATCH, pas chaque époque
+                "frequency": 1
+            },
+        }
+        
+
     

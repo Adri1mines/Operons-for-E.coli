@@ -20,7 +20,6 @@ flags.DEFINE_string("project_name", "my_project", "Name of the WandB project")
 flags.DEFINE_string("wandb_team_name", "my_team", "Name of the team")
 flags.DEFINE_integer("num_epochs", 10, "Number of epochs")
 flags.DEFINE_integer("seed", 42, "Random seed")
-flags.DEFINE_float("init_lr", 0.001, "Initial learning rate")
 flags.DEFINE_integer("batch_size", 32, "Batch size")
 flags.DEFINE_integer("warmup", 1000, "Learning rate warmup steps")
 flags.DEFINE_integer("num_workers", 2, "Number of DataLoader workers")
@@ -59,7 +58,6 @@ def main(argv):
 
     wandb_project_name = FLAGS.project_name
     num_epochs = FLAGS.num_epochs
-    initial_lr = FLAGS.init_lr
     batch_size = FLAGS.batch_size
     warmup = FLAGS.warmup
     num_workers = FLAGS.num_workers
@@ -67,17 +65,20 @@ def main(argv):
     model_save_name = FLAGS.model_save_name
     model_path = FLAGS.model_path
     resume_training = FLAGS.resume_training
-    wandb_team_name = "adrien-le_marchand-mines-paris-alumni"
+    wandb_team_name = FLAGS.wandb_team_name
+    seed = FLAGS.seed
+
+    generator = torch.Generator().manual_seed(seed)
 
     full_dataset = PretrainDataset()
 
     val_size = int(config_param["data"]["val_dataset_size"]*len(full_dataset))
     train_size = len(full_dataset)-val_size
 
-    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator = seed)
 
-    train_dataloader = DataLoader(train_dataset, batch_size = batch_size)
-    val_dataloader = DataLoader(val_dataset, batch_size = batch_size)
+    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator)
+    val_dataloader = DataLoader(val_dataset, batch_size = batch_size, shuffle = True, generator = generator)
 
     if model_path and os.path.isfile(model_path):
         logger.info(f"Loading model from checkpoint: {model_path}")
@@ -119,10 +120,10 @@ def main(argv):
         logger=wandb_logger,                 # Connecte WandB
         callbacks=[checkpoint_callback, lr_monitor], # Connecte la sauvegarde et le moniteur de LR
         max_epochs=num_epochs,
-        accelerator="auto",                  # Choisit GPU/CPU tout seul
+        accelerator="cuda",                  # Choisit GPU/CPU tout seul
         devices="auto",
         log_every_n_steps=10,                # Fréquence de log pour WandB
-        val_check_interval=1.0,              # Vérifie la validation à chaque fin d'époque
+        val_check_interval=0.2,              # Vérifie la validation à chaque fin d'époque
     )
     logger.info("Starting training...")
     trainer.fit(
