@@ -7,3 +7,4 @@ tokenizers
 lightning
 wandb
 loguru
+rotary-embedding-torch
