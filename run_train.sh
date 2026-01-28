@@ -4,11 +4,11 @@ echo "Lancement de l'entraînement du DNA Transformer..."
 
 
 python3 train.py \
-    --project_name="Operons for E.coli" \
-    --wandb_team_name = "adrien-le_marchand-mines-paris-alumni" \
+    --project_name="Operons" \
+    --wandb_team_name= "Adrien_LM" \
     --config_path="config.json" \
     --num_epochs=20 \
     --batch_size=64 \
-    --model_save_name="dna_model_test" \
+    --model_save_name="dna_model_baseline" \
     --seed=42 \
     --num_workers=4 

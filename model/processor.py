@@ -46,16 +46,18 @@ class DNAProcessor(pl.LightningModule):
         seqs = torch.tensor([input]*n_sequence, device = device)
         len = seqs.size(1)
         while len < max_len:
-            logits = self.model(input)
+            logits = self.model(seqs)
             last_logits = logits[:, -1, :]/temp
             probs = torch.softmax(last_logits, dim=-1)
             next_tokens = torch.multinomial(probs, num_samples=1)
             seqs = torch.cat([seqs, next_tokens], dim=1)
+            len += 1
 
         generated_strings = []
         sep_token_id = self.tokenizer.token_to_id("[SEP]")
         for seq in seqs:
-            decoded = self.tokenizer.decode(seq.tolist(), skip_special_tokens = True)
+            seq_list = seq.tolist()
+            decoded = self.tokenizer.decode(seq_list, skip_special_tokens = True)
             generated_strings.append(decoded)
             if sep_token_id in seq_list:
                 # On coupe tout ce qui dépasse après le premier [SEP]

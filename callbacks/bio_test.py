@@ -1,22 +1,25 @@
-import pytorch_lightning as pl
+import lightning as pl
+from lightning.pytorch.callbacks import Callback
 import torch
 import numpy as np
 import wandb
 import matplotlib.pyplot as plt
 from collections import Counter
 import re
+from tokenizers import Tokenizer
 
-class BioEvalCallback(pl.Callback):
-    def __init__(self, val_dataset, num_samples=50, max_len=1024):
+class BioEvalCallback(Callback):
+    def __init__(self, tokenizer_path, val_dataset, num_samples=50, max_len=1024):
         super().__init__()
         self.val_dataset = val_dataset
         self.num_samples = num_samples
         self.max_len = max_len
+        self.tokenizer = Tokenizer.from_file(tokenizer_path)
         # On pré-calcule les stats du VRAI dataset pour comparer
         print("Calcul des statistiques de référence (Validation Set)...")
-        self.real_gc = self._compute_gc_stats(val_dataset)
         print("Analyse du dataset de validation (K-mers & ORFs)...")
         real_seqs = self._sample_real_sequences(count=200)
+        self.real_gc = self._compute_gc_stats(real_seqs)
         
         self.ref_kmer_dist = self._get_kmer_distribution(real_seqs, k=3)
         self.ref_orf_len = np.mean([self._get_max_orf_length(s) for s in real_seqs])
@@ -37,7 +40,7 @@ class BioEvalCallback(pl.Callback):
         seqs = []
         for i in indices:
             ids = self.val_dataset[i].tolist()
-            txt = self.val_dataset.tokenizer.decode(ids, skip_special_tokens=True)
+            txt = self.tokenizer.decode(ids, skip_special_tokens=True)
             seqs.append(txt.replace(" ", ""))
         return seqs
     
@@ -80,8 +83,8 @@ class BioEvalCallback(pl.Callback):
         # 1. Génération
         print(f"\n[BioEval] Génération de {self.num_samples} séquences...")
         gen_seqs = pl_module.generate_sequences(
-            num_sequences=self.num_samples, 
-            max_length=self.max_len
+            n_sequence=self.num_samples, 
+            max_len=self.max_len
         )
         
         # 2. Calcul des métriques biologiques
@@ -136,23 +139,6 @@ class BioEvalCallback(pl.Callback):
             "bio/gc_error": gc_error,
             "bio/avg_length": np.mean(lengths) if lengths else 0
         }
-        
         # Log des scalaires
         pl_module.log_dict(metrics)
-        
-        # 4. Log d'un histogramme (Distribution GC)
-        # C'est très visuel sur WandB pour voir si la distribution colle
-        if trainer.logger:
-            # On crée une table WandB pour voir les séquences générées
-            columns = ["Generated_Sequence", "GC_Content"]
-            data = [[s[:50]+"...", g] for s, g in zip(gen_seqs[:10], gc_values[:10])] # On log les 10 premières
-            
-            trainer.logger.experiment.log({
-                "bio/sequences_sample": wandb.Table(data=data, columns=columns),
-                "bio/gc_distribution": wandb.plot.histogram(
-                    wandb.Table(data=[[g] for g in gc_values], columns=["gc"]), 
-                    "gc", 
-                    title="Generated GC Distribution"
-                )
-            })
             

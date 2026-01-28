@@ -13,13 +13,13 @@ class DNATransformer(nn.Module):
         self.max_len = max_len
         self.embedding = nn.Embedding(vocab_size, d_model)
         self.pos_embedding = nn.Embedding(max_len, d_model)
-        decoder_layer = nn.TransformerDecoderLayer(d_model=d_model, 
+        decoder_layer = nn.TransformerEncoderLayer(d_model=d_model, 
                                                     nhead=n_head, 
                                                     dim_feedforward = 4 * d_model,
                                                     batch_first = True,
                                                     norm_first = True,
                                                     activation = "gelu")
-        self.transformer_decoder = nn.TransformerDecoder(decoder_layer, num_layers=num_layers)
+        self.transformer_encoder = nn.TransformerEncoder(decoder_layer, num_layers=num_layers)
         self.output_head = nn.Linear(d_model, vocab_size)
 
     def forward(self, x):
@@ -28,7 +28,7 @@ class DNATransformer(nn.Module):
         pos_emb = self.pos_embedding(pos_tokens)
         x = token_emb + pos_emb
         causal_mask = nn.Transformer.generate_square_subsequent_mask(x.size(1), device=x.device)
-        x = self.transformer_decoder(x, tgt_mask=causal_mask, is_causal=True)
+        x = self.transformer_encoder(x, mask=causal_mask, is_causal=True)
         logits = self.output_head(x)
         return logits
 

@@ -10,6 +10,7 @@ from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from loguru import logger
 from absl import app, flags
+from callbacks.bio_test import BioEvalCallback
 import json
 
 torch.set_float32_matmul_precision("high")
@@ -75,7 +76,7 @@ def main(argv):
     val_size = int(config_param["data"]["val_dataset_size"]*len(full_dataset))
     train_size = len(full_dataset)-val_size
 
-    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator = seed)
+    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator = generator)
 
     train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator)
     val_dataloader = DataLoader(val_dataset, batch_size = batch_size, shuffle = True, generator = generator)
@@ -105,6 +106,8 @@ def main(argv):
     else:
         checkpoint_callback = ModelCheckpoint(dirpath="checkpoints")
     lr_monitor = LearningRateMonitor(logging_interval="step")
+    bio_eval_callback = BioEvalCallback(tokenizer_path = config_param["tokenizer"]["tokenizer_filepath"], 
+                                        val_dataset=val_dataset)
 
     wandb_logger.experiment.config.update(
         {
@@ -112,18 +115,18 @@ def main(argv):
             "d_model": config_param["model"]["d_model"],
             "n_head": config_param["model"]["n_head"],
             "context_size": config_param["model"]["max_len"],
-            "max_lr": initial_lr,
+            "max_lr": config_param["training"]["learning_rate"],
             "batch_size": batch_size,
         }
     )
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
-        callbacks=[checkpoint_callback, lr_monitor], # Connecte la sauvegarde et le moniteur de LR
+        callbacks=[checkpoint_callback, lr_monitor, bio_eval_callback], # Connecte la sauvegarde et le moniteur de LR
         max_epochs=num_epochs,
         accelerator="cuda",                  # Choisit GPU/CPU tout seul
         devices="auto",
         log_every_n_steps=10,                # Fréquence de log pour WandB
-        val_check_interval=0.2,              # Vérifie la validation à chaque fin d'époque
+        val_check_interval=1.0,              # Vérifie la validation à chaque fin d'époque
     )
     logger.info("Starting training...")
     trainer.fit(
