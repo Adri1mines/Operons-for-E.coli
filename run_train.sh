@@ -7,7 +7,7 @@ python3 train.py \
     --project_name="Operons" \
     --wandb_team_name= "Adrien_LM" \
     --config_path="config.json" \
-    --num_epochs=15 \
+    --num_epochs=6 \
     --batch_size=64 \
     --model_save_name="dna_model_llamafied_med" \
     --seed=42 \

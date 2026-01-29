@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 import wandb
 from absl import app, flags
 from lightning.pytorch import Trainer, seed_everything
-from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
+from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint, EarlyStopping
 from lightning.pytorch.loggers import WandbLogger
 from loguru import logger
 from absl import app, flags
@@ -108,6 +108,12 @@ def main(argv):
     lr_monitor = LearningRateMonitor(logging_interval="step")
     bio_eval_callback = BioEvalCallback(tokenizer_path = config_param["tokenizer"]["tokenizer_filepath"], 
                                         val_dataset=val_dataset)
+    early_stop_callback = EarlyStopping(
+    monitor="val_loss",  # On surveille la loss de validation
+    min_delta=0.00,      # Il faut que ça s'améliore un minimum
+    patience=2,          # Si ça ne s'améliore pas pendant 2 checks (epochs), on coupe
+    verbose=True,
+    mode="min")
 
     wandb_logger.experiment.config.update(
         {
@@ -121,7 +127,7 @@ def main(argv):
     )
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
-        callbacks=[checkpoint_callback, lr_monitor, bio_eval_callback], # Connecte la sauvegarde et le moniteur de LR
+        callbacks=[checkpoint_callback, lr_monitor, bio_eval_callback, early_stop_callback], # Connecte la sauvegarde et le moniteur de LR
         max_epochs=num_epochs,
         accelerator="gpu",                  # Choisit GPU/CPU tout seul
         devices=1,
