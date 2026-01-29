@@ -79,7 +79,7 @@ def main(argv):
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator = generator)
 
     train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator)
-    val_dataloader = DataLoader(val_dataset, batch_size = batch_size, shuffle = True, generator = generator)
+    val_dataloader = DataLoader(val_dataset, batch_size = batch_size)
 
     if model_path and os.path.isfile(model_path):
         logger.info(f"Loading model from checkpoint: {model_path}")
@@ -116,7 +116,7 @@ def main(argv):
     )
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
-        callbacks=[checkpoint_callback, lr_monitor], # Connecte la sauvegarde et le moniteur de LR
+        callbacks=[lr_monitor], # Connecte la sauvegarde et le moniteur de LR
         max_epochs= 2000,
         accelerator="auto",                  # Choisit GPU/CPU tout seul
         devices="auto",

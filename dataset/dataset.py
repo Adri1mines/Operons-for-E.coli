@@ -15,7 +15,7 @@ class PretrainDataset(Dataset):
                  tokenizer = config_param["tokenizer"]["tokenizer_filepath"], 
                  chunk_size = config_param["data"]["chunk_size_read"], 
                  stride = config_param["data"]["stride"],
-                 max_len = 1022):
+                 max_len = config_param["model"]["max_len"]):
         self.tokenizer = Tokenizer.from_file(tokenizer)
         self.tokenizer.enable_padding(
             direction='right',
@@ -23,7 +23,7 @@ class PretrainDataset(Dataset):
             pad_token="[PAD]", 
             length=max_len
         )
-        self.tokenizer.enable_truncation(max_length=max_len)
+        self.tokenizer.enable_truncation(max_length=max_len - 2)
         self.chunk_size = chunk_size
         self.clean_genome_path = clean_genome_path
         self.offsets = []
@@ -41,8 +41,6 @@ class PretrainDataset(Dataset):
     def __getitem__(self, idx):
         
         offset = self.offsets[idx]
-        #On read binary parce que l'indice représente l'octet, et on veut éviter un caractère spécial
-        #qui viendrait casser l'indexing
         try:
             with open(self.clean_genome_path, 'r', encoding='utf-8') as f:#!!! NE MARCHE PAS EN BINARY POURQUOI????
                 f.seek(offset)
@@ -51,7 +49,7 @@ class PretrainDataset(Dataset):
             print("ERREUR: Le fichier contient des caractères spéciaux non tolérés")
         except Exception as e:
             print("Erreur lors du chargement du dataset")
-        encoding = self.tokenizer.encode(chunk)
+        encoding = self.tokenizer.encode(chunk, add_special_tokens = True)
         # On récupère les IDs (les nombres)
         ids = encoding.ids
         #gestion du cas ou on retrouve un séparateur de chunk
@@ -64,10 +62,9 @@ class PretrainDataset(Dataset):
             padding_len = len(ids[ids.index(chunk_sep_id):])
             padding = [pad_id for _ in range(padding_len)]
             ids = ids_to_keep + padding
-        #on rajoute les tokens de début et fin de séquence
+        sep_id = self.tokenizer.token_to_id("[SEP]")
         cls_id = self.tokenizer.token_to_id("[CLS]")
-        sep_id = self.tokenizer.token_to_id("[SEP]")        
-        ids = [cls_id] + ids + [sep_id]
-        
+        ids = cls_id + ids + sep_id
+
         return torch.tensor(ids, dtype=torch.long)
 

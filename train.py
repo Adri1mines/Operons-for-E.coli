@@ -79,7 +79,7 @@ def main(argv):
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator = generator)
 
     train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator)
-    val_dataloader = DataLoader(val_dataset, batch_size = batch_size, shuffle = True, generator = generator)
+    val_dataloader = DataLoader(val_dataset, batch_size = batch_size)
 
     if model_path and os.path.isfile(model_path):
         logger.info(f"Loading model from checkpoint: {model_path}")
