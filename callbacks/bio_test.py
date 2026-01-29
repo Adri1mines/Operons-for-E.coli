@@ -3,7 +3,6 @@ from lightning.pytorch.callbacks import Callback
 import torch
 import numpy as np
 import wandb
-import matplotlib.pyplot as plt
 from collections import Counter
 import re
 from tokenizers import Tokenizer

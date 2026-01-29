@@ -64,7 +64,7 @@ class PretrainDataset(Dataset):
             ids = ids_to_keep + padding
         sep_id = self.tokenizer.token_to_id("[SEP]")
         cls_id = self.tokenizer.token_to_id("[CLS]")
-        ids = cls_id + ids + sep_id
+        ids = [cls_id] + ids + [sep_id]
 
         return torch.tensor(ids, dtype=torch.long)
 

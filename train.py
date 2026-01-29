@@ -23,8 +23,8 @@ flags.DEFINE_integer("num_epochs", 10, "Number of epochs")
 flags.DEFINE_integer("seed", 42, "Random seed")
 flags.DEFINE_integer("batch_size", 32, "Batch size")
 flags.DEFINE_integer("warmup", 1000, "Learning rate warmup steps")
-flags.DEFINE_integer("num_workers", 2, "Number of DataLoader workers")
 flags.DEFINE_integer("prefetch_factor", 2, "Number of batches to prefetch")
+flags.DEFINE_integer("num_workers", 2, "Number of DataLoader workers")
 flags.DEFINE_string(
     "model_save_name", None, "Name to save the checkpoint during training"
 )
@@ -60,7 +60,6 @@ def main(argv):
     wandb_project_name = FLAGS.project_name
     num_epochs = FLAGS.num_epochs
     batch_size = FLAGS.batch_size
-    warmup = FLAGS.warmup
     num_workers = FLAGS.num_workers
     prefetch_factor = FLAGS.prefetch_factor
     model_save_name = FLAGS.model_save_name
@@ -78,8 +77,8 @@ def main(argv):
 
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator = generator)
 
-    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator)
-    val_dataloader = DataLoader(val_dataset, batch_size = batch_size)
+    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator, num_workers = num_workers, prefetch_factor = prefetch_factor)
+    val_dataloader = DataLoader(val_dataset, batch_size = batch_size, num_workers = num_workers, prefetch_factor = prefetch_factor)
 
     if model_path and os.path.isfile(model_path):
         logger.info(f"Loading model from checkpoint: {model_path}")
@@ -121,13 +120,12 @@ def main(argv):
     )
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
-        callbacks=[checkpoint_callback, lr_monitor], #, bio_eval_callback], # Connecte la sauvegarde et le moniteur de LR
+        callbacks=[checkpoint_callback, lr_monitor, bio_eval_callback], # Connecte la sauvegarde et le moniteur de LR
         max_epochs=num_epochs,
         accelerator="auto",                  # Choisit GPU/CPU tout seul
         devices="auto",
         log_every_n_steps=10,                # Fréquence de log pour WandB
-        val_check_interval=1.0,
-        overfit_batches = 1              # Vérifie la validation à chaque fin d'époque
+        val_check_interval=1.0,          # Vérifie la validation à chaque fin d'époque
     )
     logger.info("Starting training...")
     trainer.fit(

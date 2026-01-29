@@ -11,4 +11,4 @@ python3 test_run.py \
     --batch_size=64 \
     --model_save_name="dna_model_baseline" \
     --seed=42 \
-    --num_workers=4 
+    --num_workers=23

@@ -8,3 +8,4 @@ lightning
 wandb
 loguru
 rotary-embedding-torch
+absl-py
