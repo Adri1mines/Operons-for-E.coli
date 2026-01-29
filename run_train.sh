@@ -7,8 +7,8 @@ python3 train.py \
     --project_name="Operons" \
     --wandb_team_name= "Adrien_LM" \
     --config_path="config.json" \
-    --num_epochs=2000 \
+    --num_epochs=15 \
     --batch_size=64 \
-    --model_save_name="dna_model_baseline_DEBUG" \
+    --model_save_name="dna_model_llamafied" \
     --seed=42 \
     --num_workers=4 

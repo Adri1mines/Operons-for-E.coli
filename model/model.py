@@ -4,6 +4,20 @@ from math import sqrt
 import torch.nn.functional as F
 from rotary_embedding_torch import RotaryEmbedding
 
+class SwiGLU(nn.Module):
+    def __init__(self, dim, hidden_dim, multiple_of=256):
+        super().__init__()
+        hidden_dim = int(2 * hidden_dim / 3)
+        hidden_dim = multiple_of * ((hidden_dim + multiple_of - 1) // multiple_of)
+
+        self.w1 = nn.Linear(dim, hidden_dim, bias=False) # Gate
+        self.w2 = nn.Linear(hidden_dim, dim, bias=False) # Output
+        self.w3 = nn.Linear(dim, hidden_dim, bias=False) # Value
+
+    def forward(self, x):
+
+        return self.w2(F.silu(self.w1(x)) * self.w3(x))
+
 class RoPEAttentionBlock(nn.Module):
     def __init__(self, d_model, n_head):
         super().__init__()
@@ -46,15 +60,11 @@ class TransformerBlock(nn.Module):
     """Un bloc complet : Norm -> Attention -> Add -> Norm -> FFN -> Add"""
     def __init__(self, d_model, n_head):
         super().__init__()
-        self.norm1 = nn.LayerNorm(d_model)
+        self.norm1 = nn.RMSNorm(d_model)
         self.attn = RoPEAttentionBlock(d_model, n_head)
         
-        self.norm2 = nn.LayerNorm(d_model)
-        self.mlp = nn.Sequential(
-            nn.Linear(d_model, 4 * d_model),
-            nn.GELU(),
-            nn.Linear(4 * d_model, d_model)
-        )
+        self.norm2 = nn.RMSNorm(d_model)
+        self.swiglu = SwiGLU(d_model, 4*d_model)
 
     def forward(self, x):
         # Connexion résiduelle 1 (Pre-Norm architecture)
