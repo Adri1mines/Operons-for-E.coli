@@ -9,6 +9,7 @@ python3 train.py \
     --config_path="config.json" \
     --num_epochs=15 \
     --batch_size=64 \
-    --model_save_name="dna_model_RoPE_transformer" \
+    --model_save_name="dna_model_RoPE_transformer_2" \
     --seed=42 \
-    --num_workers=23 
+    --num_workers=23 \
+    --prefetch_factor=4
