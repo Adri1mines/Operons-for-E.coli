@@ -123,8 +123,9 @@ def main(argv):
         logger=wandb_logger,                 # Connecte WandB
         callbacks=[checkpoint_callback, lr_monitor, bio_eval_callback], # Connecte la sauvegarde et le moniteur de LR
         max_epochs=num_epochs,
-        accelerator="auto",                  # Choisit GPU/CPU tout seul
-        devices="auto",
+        accelerator="gpu",                  # Choisit GPU/CPU tout seul
+        devices=1,
+        precision = "bf16-mixed",
         log_every_n_steps=10,                # Fréquence de log pour WandB
         val_check_interval=1.0,            # Vérifie la validation à chaque fin d'époque
     )

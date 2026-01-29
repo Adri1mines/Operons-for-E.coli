@@ -119,6 +119,7 @@ def main(argv):
         max_epochs= num_epochs,
         accelerator="auto",                  # Choisit GPU/CPU tout seul
         devices="auto",
+        precision = "bf16-mixed",
         log_every_n_steps=10,                # Fréquence de log pour WandB
         val_check_interval=1.0,
         overfit_batches = 1            

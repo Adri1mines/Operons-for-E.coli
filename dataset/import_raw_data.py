@@ -7,7 +7,7 @@ import gzip
 import shutil
 
 CONFIG_PATH = "config.json"
-TARGET = 100
+TARGET = 400
 
 with open(CONFIG_PATH, 'r') as f:
     config_param = json.load(f)
