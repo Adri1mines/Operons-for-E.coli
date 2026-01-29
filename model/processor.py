@@ -3,7 +3,7 @@ import lightning as pl
 import torch
 import torch.nn as nn
 import json
-from model.model import DNATransformerRoPE
+from model.model import DNATransformerLlama
 from tokenizers import Tokenizer
 
 CONFIG_PATH = "config.json"
@@ -16,7 +16,7 @@ class DNAProcessor(pl.LightningModule):
     def __init__(self, training_params = config_param):
         super().__init__()
         self.save_hyperparameters()
-        self.model = DNATransformerRoPE(vocab_size = training_params["tokenizer"]["vocab_size"]
+        self.model = DNATransformerLlama(vocab_size = training_params["tokenizer"]["vocab_size"]
                                     ,d_model = training_params["model"]["d_model"]
                                     ,n_head = training_params["model"]["n_head"]
                                     ,num_layers = training_params["model"]["num_layers"])

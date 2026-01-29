@@ -70,10 +70,10 @@ class TransformerBlock(nn.Module):
         # Connexion résiduelle 1 (Pre-Norm architecture)
         x = x + self.attn(self.norm1(x))
         # Connexion résiduelle 2
-        x = x + self.mlp(self.norm2(x))
+        x = x + self.swiglu(self.norm2(x))
         return x
 
-class DNATransformerRoPE(nn.Module):
+class DNATransformerLlama(nn.Module):
     def __init__(self, vocab_size, d_model, n_head, num_layers):
         super().__init__()
         self.token_embedding = nn.Embedding(vocab_size, d_model)
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     
     # 1. Instanciation
     try:
-        model = DNATransformerRoPE(vocab_size, d_model, n_head, layers)
+        model = DNATransformerLlama(vocab_size, d_model, n_head, layers)
         print("✅ Modèle instancié avec succès.")
     except Exception as e:
         print(f"❌ Erreur instanciation : {e}")

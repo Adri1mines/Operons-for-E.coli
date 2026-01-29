@@ -99,7 +99,6 @@ def main(argv):
 
     wandb_logger = WandbLogger(experiment=wandb_run)
     lightning_module.wandb_run_id = wandb_logger.experiment.id
-    else:
     lr_monitor = LearningRateMonitor(logging_interval="step")
     bio_eval_callback = BioEvalCallback(tokenizer_path = config_param["tokenizer"]["tokenizer_filepath"], 
                                         val_dataset=val_dataset)
@@ -117,12 +116,12 @@ def main(argv):
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
         callbacks=[lr_monitor], # Connecte la sauvegarde et le moniteur de LR
-        max_epochs= 2000,
+        max_epochs= num_epochs,
         accelerator="auto",                  # Choisit GPU/CPU tout seul
         devices="auto",
         log_every_n_steps=10,                # Fréquence de log pour WandB
         val_check_interval=1.0,
-        batch_overfit = 1            
+        overfit_batches = 1            
     )
     logger.info("Starting training...")
     trainer.fit(
