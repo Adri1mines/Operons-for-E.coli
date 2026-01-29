@@ -20,6 +20,7 @@ class DNAProcessor(pl.LightningModule):
                                     ,d_model = training_params["model"]["d_model"]
                                     ,n_head = training_params["model"]["n_head"]
                                     ,num_layers = training_params["model"]["num_layers"])
+        self.model = torch.compile(self.model)
         self.params = training_params
         self.tokenizer = Tokenizer.from_file(training_params["tokenizer"]["tokenizer_filepath"])
         self.wandb_run_id = None
