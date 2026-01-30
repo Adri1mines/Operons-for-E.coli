@@ -109,7 +109,7 @@ def main(argv):
     bio_eval_callback = BioEvalCallback(tokenizer_path = config_param["tokenizer"]["tokenizer_filepath"], 
                                         val_dataset=val_dataset)
     early_stop_callback = EarlyStopping(
-    monitor="val_loss",  # On surveille la loss de validation
+    monitor="bio/global_score",  # On surveille la loss de validation
     min_delta=0.00,      # Il faut que ça s'améliore un minimum
     patience=2,          # Si ça ne s'améliore pas pendant 2 checks (epochs), on coupe
     verbose=True,

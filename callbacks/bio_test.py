@@ -136,7 +136,8 @@ class BioEvalCallback(Callback):
             "bio/generated_gc_avg": avg_gen_gc,
             "bio/real_gc_ref": self.real_gc,
             "bio/gc_error": gc_error,
-            "bio/avg_length": np.mean(lengths) if lengths else 0
+            "bio/avg_length": np.mean(lengths) if lengths else 0,
+            "bio/global_score": kmer_score + gc_error
         }
         # Log des scalaires
         pl_module.log_dict(metrics)

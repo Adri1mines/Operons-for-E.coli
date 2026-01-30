@@ -83,7 +83,7 @@ class DNATransformerLlama(nn.Module):
             TransformerBlock(d_model, n_head) for _ in range(num_layers)
         ])
         
-        self.final_norm = nn.LayerNorm(d_model)
+        self.final_norm = nn.RMSNorm(d_model)
         self.output_head = nn.Linear(d_model, vocab_size)
         self.output_head.weight = self.token_embedding.weight
 
