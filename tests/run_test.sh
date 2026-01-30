@@ -3,7 +3,7 @@
 echo "Lancement du test du DNA Transformer..."
 
 
-python3 test_run.py \
+python3 tests/test_run.py \
     --project_name="Operons" \
     --wandb_team_name= "Adrien_LM" \
     --config_path="config.json" \
