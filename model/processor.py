@@ -3,6 +3,7 @@ import lightning as pl
 import torch
 import torch.nn as nn
 import json
+from tqdm import tqdm
 from model.model import DNATransformerLlama
 from tokenizers import Tokenizer
 
@@ -20,7 +21,6 @@ class DNAProcessor(pl.LightningModule):
                                     ,d_model = training_params["model"]["d_model"]
                                     ,n_head = training_params["model"]["n_head"]
                                     ,num_layers = training_params["model"]["num_layers"])
-        self.model = torch.compile(self.model)
         self.params = training_params
         self.tokenizer = Tokenizer.from_file(training_params["tokenizer"]["tokenizer_filepath"])
         self.wandb_run_id = None
@@ -38,20 +38,22 @@ class DNAProcessor(pl.LightningModule):
         loss = self.loss(logits.reshape(-1, logits.size(-1)), target.reshape(-1))
         self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True)
         return loss
-    
+        
+    @torch.no_grad()
     def generate_sequences(self, n_sequence = 1, max_len = 1024, temp = 0.7, prompt = ""):
         self.model.eval()
         device = self.device
         input = self.tokenizer.encode("[CLS]" + prompt).ids
         seqs = torch.tensor([input]*n_sequence, device = device)
-        len = seqs.size(1)
-        while len < max_len:
+        length = seqs.size(1)
+        print("Début de la génération de séquences...")
+        for i in tqdm(range(max_len-length)):
             logits = self.model(seqs)
             last_logits = logits[:, -1, :]/temp
             probs = torch.softmax(last_logits, dim=-1)
             next_tokens = torch.multinomial(probs, num_samples=1)
             seqs = torch.cat([seqs, next_tokens], dim=1)
-            len += 1
+            length += 1
 
         generated_strings = []
         sep_token_id = self.tokenizer.token_to_id("[SEP]")

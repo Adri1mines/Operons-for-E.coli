@@ -32,3 +32,5 @@ callbacks/__pycache__
 checkpoints/
 #nohup log
 nohup.out
+#lightning logs
+lightning_logs/

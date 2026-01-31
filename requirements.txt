@@ -8,3 +8,5 @@ lightning
 wandb
 loguru
 rotary-embedding-torch
+bioython
+matplotlib

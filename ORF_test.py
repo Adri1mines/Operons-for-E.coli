@@ -3,7 +3,34 @@ import matplotlib.pyplot as plt
 from Bio.Seq import Seq
 import numpy as np
 
-MODEL_PATH = ""
+import torch
+
+MODEL_PATH = "checkpoints/dna_model_llamafied_med.ckpt"
+
+def load_compiled_checkpoint(checkpoint_path, model_class):
+    # 1. Charger le fichier brut (sur CPU pour éviter de saturer la VRAM)
+    checkpoint = torch.load(checkpoint_path, map_location="cpu")
+    
+    # 2. Récupérer le dictionnaire de poids
+    state_dict = checkpoint["state_dict"]
+    
+    # 3. Créer un nouveau dictionnaire "propre"
+    new_state_dict = {}
+    for key, value in state_dict.items():
+        # L'astuce est ici : on supprime "_orig_mod." s'il est présent
+        new_key = key.replace("_orig_mod.", "")
+        new_state_dict[new_key] = value
+        
+    # 4. Instancier le modèle avec les hyperparamètres sauvegardés
+    # (Cela suppose que tu as utilisé self.save_hyperparameters() dans ton __init__)
+    hparams = checkpoint.get("hyper_parameters", {})
+    model = model_class(**hparams)
+    
+    # 5. Charger les poids nettoyés
+    model.load_state_dict(new_state_dict)
+    
+    return model
+
 
 def find_first_orf(dna_sequence):
     """
@@ -93,8 +120,10 @@ def analyze_generations(sequences):
 if __name__ == "__main__":
     # Remplace cette liste par les sorties de ton modèle
     # Exemple : generated_seqs = model.generate(prompt="ATG", num_samples=100)
-    lightning_module = DNAProcessor.load_from_checkpoint(checkpoint_path=MODEL_PATH)
-    orfs = lightning_module.generate_sequences(n_sequence = 100, max_len = 1024, temp = 0.7, prompt = "ATG")
+    lightning_module = load_compiled_checkpoint(MODEL_PATH, DNAProcessor)
+    lightning_module.to("cuda")  # <--- C'est cette ligne qui met à jour self.device
+    lightning_module.eval()
+    orfs = lightning_module.generate_sequences(n_sequence = 50, max_len = 2048, temp = 0.7, prompt = "ATG")
 
     
     analyze_generations(orfs)
