@@ -34,3 +34,6 @@ checkpoints/
 nohup.out
 #lightning logs
 lightning_logs/
+#finetuning data
+finetuning/*.tsv
+finetuning/*.fasta

@@ -10,3 +10,4 @@ loguru
 rotary-embedding-torch
 bioython
 matplotlib
+pandas
