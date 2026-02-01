@@ -123,7 +123,6 @@ if __name__ == "__main__":
     lightning_module = load_compiled_checkpoint(MODEL_PATH, DNAProcessor)
     lightning_module.to("cuda")  # <--- C'est cette ligne qui met à jour self.device
     lightning_module.eval()
-    orfs = lightning_module.generate_sequences(n_sequence = 50, max_len = 2048, temp = 0.7, prompt = "ATG")
+    orfs = lightning_module.generate_sequences(n_sequence = 50, max_len = 1024, temp = 0.5, prompt = "ATG")
 
-    
     analyze_generations(orfs)

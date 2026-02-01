@@ -57,9 +57,14 @@ class DNAProcessor(pl.LightningModule):
 
         generated_strings = []
         sep_token_id = self.tokenizer.token_to_id("[SEP]")
+        special_tokens = [self.tokenizer.token_to_id(token) for token
+                         in ["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"]]
         for seq in seqs:
             seq_list = seq.tolist()
-            decoded = self.tokenizer.decode(seq_list, skip_special_tokens = True)
+            for special_token in special_tokens:
+                if special_token in seq_list:
+                    seq_list.remove(special_token)
+            decoded = self.tokenizer.decode(seq_list, skip_special_tokens = False) 
             generated_strings.append(decoded)
             if sep_token_id in seq_list:
                 # On coupe tout ce qui dépasse après le premier [SEP]
