@@ -35,5 +35,5 @@ nohup.out
 #lightning logs
 lightning_logs/
 #finetuning data
-finetuning/*.tsv
-finetuning/*.fasta
+dataset/finetuning/*.tsv
+dataset/finetuning/*.fasta

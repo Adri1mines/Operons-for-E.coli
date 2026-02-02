@@ -23,7 +23,7 @@ class PretrainDataset(Dataset):
             pad_token="[PAD]", 
             length=max_len
         )
-        self.tokenizer.enable_truncation(max_length=max_len - 2)
+        self.tokenizer.enable_truncation(max_length=max_len)
         self.chunk_size = chunk_size
         self.clean_genome_path = clean_genome_path
         self.offsets = []
@@ -62,9 +62,6 @@ class PretrainDataset(Dataset):
             padding_len = len(ids[ids.index(chunk_sep_id):])
             padding = [pad_id for _ in range(padding_len)]
             ids = ids_to_keep + padding
-        sep_id = self.tokenizer.token_to_id("[SEP]")
-        cls_id = self.tokenizer.token_to_id("[CLS]")
-        ids = [cls_id] + ids + [sep_id]
 
         return torch.tensor(ids, dtype=torch.long)
 

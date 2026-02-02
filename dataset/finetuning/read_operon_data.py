@@ -47,19 +47,3 @@ def main():
     # On vire les lignes où il n'y a pas de Promoteur (NaN) car inutilisables pour la génération
     clean_tu = tu_df.dropna(subset=['PromoterName', 'Genes'])
     clean_tu = clean_tu[clean_tu["confidence"] != "W"]
-
-    print(f"Opérons complets utilisables : {len(clean_tu)}")
-    print(clean_tu.head())
-
-    # 3. Exemple d'extraction pour une ligne
-    row = clean_tu.iloc[0]
-    promoter = row['PromoterName']
-    genes = row['Genes'].split(';') # RegulonDB sépare par des points-virgules
-    genes = [g for g in genes if g] # Nettoyage des strings vides
-
-    print(f"\nStructure de la TU '{row['TUName']}':")
-    print(f"  🚩 Promoteur  : {promoter}")
-    print(f"  🧬 Gènes      : {genes}")
-    print(f"  🛑 Terminateur: {row['TerminatorID']}")
-
-    # À partir de là, tu as ta liste de courses pour aller chercher les séquences !

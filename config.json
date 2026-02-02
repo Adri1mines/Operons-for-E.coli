@@ -6,9 +6,10 @@
     "separateur": "###",
     "chunk_size_read": 6000,
     "stride": 3000,
-    "val_dataset_size": 0.1},
+    "val_dataset_size": 0.1,
+    "finetune_data_path": "finetuning/dataset_operons_train.fasta"},
  "tokenizer":{
-    "tokenizer_filepath": "tokenizer/tokenizer.json",
+    "tokenizer_filepath": "tokenizer/tokenizer_updated.json",
     "vocab_size": 1024,
     "special_codons": ["TAA", "TAG", "TGA"],
     "chunks_trained_on": 10000},

@@ -6,12 +6,40 @@ import os
 import re
 
 # CONFIGURATION
-GENOME_PATH = "finetuning/K_12_genome.fasta" # Assure-toi d'avoir le génome complet ici
-FILE_PATH_TU = "finetuning/TUSet.tsv"
-FILE_PATH_GENE = "finetuning/Gene_sequence.tsv"
-FILE_PATH_PROM = "finetuning/PromoterSet.tsv"
-FILE_PATH_TERM = "finetuning/TerminatorSet.tsv"
-OUTPUT_FILE = "finetuning/dataset_operons_train.fasta"
+GENOME_PATH = "dataset/finetuning/K_12_genome.fasta" # Assure-toi d'avoir le génome complet ici
+FILE_PATH_TU = "dataset/finetuning/TUSet.tsv"
+FILE_PATH_GENE = "dataset/finetuning/Gene_sequence.tsv"
+FILE_PATH_PROM = "dataset/finetuning/PromoterSet.tsv"
+FILE_PATH_TERM = "dataset/finetuning/TerminatorSet.tsv"
+OUTPUT_FILE = "dataset/finetuning/dataset_operons_train.csv"
+
+def translate_dna_to_protein(dna_sequence):
+    """
+    Traduit une séquence ADN de gène en protéine (Table 11 - Bacterial).
+    Gère les Start Codons alternatifs (GTG, TTG deviennent Met en début).
+    """
+    if pd.isna(dna_sequence) or len(dna_sequence) < 3:
+        return ""
+    
+    # Nettoyage
+    seq_obj = Seq(str(dna_sequence).strip().upper())
+    
+    # Traduction
+    # table=11 : Le code génétique des bactéries
+    # to_stop=True : S'arrête au premier codon stop (TAG, TAA, TGA)
+    # cds=False : On le fait 'manuellement' pour éviter les erreurs si la longueur n'est pas multiple de 3
+    protein = seq_obj.translate(table=11, to_stop=True, cds=False)
+    
+    # CORRECTION BIOLOGIQUE IMPORTANTE :
+    # En bactéries, GTG et TTG codent pour la Valine/Leucine, MAIS
+    # s'ils sont au DÉBUT du gène, ils codent pour la Méthionine (fMet).
+    # Biopython traduit bêtement GTG -> V. On doit forcer M.
+    prot_str = str(protein)
+    if len(prot_str) > 0:
+        # On force le premier AA à être une Méthionine (standard ESM)
+        prot_str = "M" + prot_str[1:]
+        
+    return prot_str
 
 def get_reverse_complement(seq_str):
     return str(Seq(seq_str).reverse_complement())
@@ -136,20 +164,20 @@ def main():
             else:
                 gene_objs.sort(key=lambda x: x[1]['Right'], reverse=True)
             
-            input_prompt = "[START_CONTEXT] " 
-            input_prompt += "[TERM_KNOWN] " if term_id in term_map else "[TERM_INFERRED] "
-            input_prompt += "[END_CONTEXT] "
+            context_prompt = "[START_CONTEXT]" 
+            context_prompt += "[TERM_KNOWN]" if term_id in term_map else "[TERM_INFERRED]"
+            context_prompt += "[END_CONTEXT]"
+            translated_prot = ""
             for g_name, g_data in gene_objs:
                 p_seq = str(g_data['ProteinSequence'])
                 if p_seq != 'nan':
-                    input_prompt += f"[START_PROT] {p_seq} [END_PROT] "
+                    translated_prot += f"{translate_dna_to_protein(p_seq)}<eos>"
 
             # --- E. Ajout au dataset ---
             dataset_entries.append({
                 "TUID": tu_id,
-                "Promoter_Source": "Exact" if prom_name in prom_map else "Inferred",
-                "Terminator_Source": "Exact" if term_id in term_map else "Inferred",
-                "Input": input_prompt,
+                "Input_context": context_prompt,
+                "translated_prot": translated_prot,
                 "Target": target_dna
             })
 
@@ -159,7 +187,6 @@ def main():
 
     final_df = pd.DataFrame(dataset_entries)
     print(f"✅ Terminé : {len(final_df)} opérons.")
-    print(final_df['Promoter_Source'].value_counts()) # Pour voir combien sont "Exacts"
     final_df.to_csv(OUTPUT_FILE, index=False)
 
 if __name__ == "__main__":

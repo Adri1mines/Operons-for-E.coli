@@ -11,3 +11,4 @@ rotary-embedding-torch
 bioython
 matplotlib
 pandas
+transformers

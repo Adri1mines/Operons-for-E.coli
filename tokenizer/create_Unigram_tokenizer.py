@@ -12,7 +12,7 @@ CONFIG_PATH = "config.json"
 with open(CONFIG_PATH, 'r') as f:
     config_param = json.load(f)
 
-TOKENIZER_PATH = config_param["tokenizer"]["tokenizer_path"]
+TOKENIZER_PATH = config_param["tokenizer"]["tokenizer_filepath"]
 CLEAN_GENOME_PATH = config_param["data"]["data_clean_filepath"]
 VOCAB_SIZE = config_param["tokenizer"]["vocab_size"]
 
@@ -38,12 +38,24 @@ def main():
     tokenizer = Tokenizer(Unigram())
 
     bases = ["A", "C", "G", "T"]
-    
+    special_tokens = [
+        "[UNK]",       # Inconnu (Indispensable)
+        "[CLS]",       # Start of Sequence (ou [START_CTX])
+        "[SEP]",       # Separator (ou [END_CTX])
+        "[PAD]",       # Padding
+        "[MASK]",      # Pour le pre-training
+        "[PROM]",      # Tes tokens biologiques
+        "[RBS]",
+        "[CDS]",
+        "[TERM]"
+        "[START_CONTEXT]", 
+        "[END_CONTEXT]"
+    ]
     # 2. Configuration de l'entraîneur
     trainer = UnigramTrainer(
         vocab_size=VOCAB_SIZE,
-        special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"] + config_param["tokenizer"]["special_codons"]
-        + [config_param["separateur"]],
+        special_tokens= special_tokens + config_param["tokenizer"]["special_codons"]
+        + [config_param["data"]["separateur"]],
         initial_alphabet= bases + [ b1 + b2 + b3 for b1 in bases for b2 in bases for b3 in bases], # On force l'alphabet de base et les codons
         show_progress = True)
 

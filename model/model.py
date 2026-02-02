@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
-from math import sqrt
 import torch.nn.functional as F
 from rotary_embedding_torch import RotaryEmbedding
+
 
 class SwiGLU(nn.Module):
     def __init__(self, dim, hidden_dim, multiple_of=256):
@@ -87,17 +87,23 @@ class DNATransformerLlama(nn.Module):
         self.output_head = nn.Linear(d_model, vocab_size)
         self.output_head.weight = self.token_embedding.weight
 
-    def forward(self, x):
-        # x : [Batch, Time]
-        x = self.token_embedding(x)
+    def forward(self, x = None, input_embeds = None):
+        if x is not None:
+            x = self.token_embedding(x)
+        else:
+            if input_embeds is None:
+                raise ValueError("aucune valeur fournie")
+            else:
+                x = input_embeds
         
-        # Passage dans toutes les couches
         for layer in self.layers:
             x = layer(x)
             
         x = self.final_norm(x)
         logits = self.output_head(x)
         return logits
+    
+
 
 
 if __name__ == "__main__":
