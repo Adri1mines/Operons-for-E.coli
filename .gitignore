@@ -19,9 +19,9 @@ rad.json
 #License-file
 *.flf
 #unprocessed data
-dataset/raw
+dataset/pretrain/raw
 #processed data
-dataset/processed
+dataset/pretrain/processed
 #wandb log
 wandb/
 #pycache
@@ -35,5 +35,5 @@ nohup.out
 #lightning logs
 lightning_logs/
 #finetuning data
-dataset/finetuning/*.tsv
-dataset/finetuning/*.fasta
+dataset/finetuning/processed
+dataset/finetuning/raw

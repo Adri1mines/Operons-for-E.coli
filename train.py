@@ -1,5 +1,5 @@
 import os
-from dataset.dataset import PretrainDataset
+from dataset.pretrain.dataset import PretrainDataset
 from model.processor import DNAProcessor
 import torch
 from torch.utils.data import DataLoader, Dataset, random_split

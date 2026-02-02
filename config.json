@@ -9,7 +9,7 @@
     "val_dataset_size": 0.1,
     "finetune_data_path": "finetuning/dataset_operons_train.fasta"},
  "tokenizer":{
-    "tokenizer_filepath": "tokenizer/tokenizer_updated.json",
+    "tokenizer_filepath": "tokenizer/tokenizer.json",
     "vocab_size": 1024,
     "special_codons": ["TAA", "TAG", "TGA"],
     "chunks_trained_on": 10000},
@@ -21,6 +21,9 @@
     "num_layers": 12},
  "training":{
     "learning_rate": 3e-4,
-    "weight_decay": 1e-2
-
- }}
+    "weight_decay": 1e-2},
+ "finetuning":{
+    "esm_model_name": "facebook/esm2_t6_8M_UR50D",
+    "data_finetune_filepath": "dataset/finetuning/processed/dataset_operons_train.csv"
+  }
+ }

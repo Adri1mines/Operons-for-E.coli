@@ -2,16 +2,14 @@ import pandas as pd
 from Bio import SeqIO
 from Bio.Seq import Seq
 import numpy as np
-import os
-import re
 
 # CONFIGURATION
-GENOME_PATH = "dataset/finetuning/K_12_genome.fasta" # Assure-toi d'avoir le génome complet ici
-FILE_PATH_TU = "dataset/finetuning/TUSet.tsv"
-FILE_PATH_GENE = "dataset/finetuning/Gene_sequence.tsv"
-FILE_PATH_PROM = "dataset/finetuning/PromoterSet.tsv"
-FILE_PATH_TERM = "dataset/finetuning/TerminatorSet.tsv"
-OUTPUT_FILE = "dataset/finetuning/dataset_operons_train.csv"
+GENOME_PATH = "dataset/finetuning/raw/K_12_genome.fasta"
+FILE_PATH_TU = "dataset/finetuning/raw/TUSet.tsv"
+FILE_PATH_GENE = "dataset/finetuning/raw/Gene_sequence.tsv"
+FILE_PATH_PROM = "dataset/finetuning/raw/PromoterSet.tsv"
+FILE_PATH_TERM = "dataset/finetuning/raw/TerminatorSet.tsv"
+OUTPUT_FILE = "dataset/finetuning/processed/dataset_operons_train.csv"
 
 def translate_dna_to_protein(dna_sequence):
     """

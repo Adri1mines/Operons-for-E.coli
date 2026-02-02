@@ -14,30 +14,11 @@ with open(CONFIG_PATH, 'r') as f:
 
 class FinetuneDataset(Dataset):
 
-    def __init__(self, finetune_data_path = config_param["data"]["data_clean_filepath"], 
+    def __init__(self, finetune_data_path = config_param["finetune"]["data_finetune_filepath"], 
                  tokenizer_decoder = config_param["tokenizer"]["tokenizer_filepath"], 
-                 esm_model_name = "facebook/esm2_t6_8M_UR50D",
+                 esm_model_name = config_param["tokenizer"]["esm_model_name"],
                  max_len = config_param["model"]["max_len"]):
-        esm_model_name="facebook/esm2_t6_8M_UR50D"
-        # print(tokenizer_decoder)
-        # try:
-        #     tok = Tokenizer.from_file(tokenizer_decoder)
-        #     print(f"✅ Tokenizer chargé depuis : {tokenizer_decoder}")
-        #     print(f"Taille du vocabulaire : {tok.get_vocab_size()}")
-            
-        #     # Test des tokens
-        #     specials = ["[START_CONTEXT]", "[UNK]", "[END_CONTEXT]", "[TERM_INFERRED]", " ", "A", "C", "T", "G"]
-        #     for s in specials:
-        #         id_ = tok.token_to_id(s)
-        #         if id_ is not None:
-        #             print(f"  - Token '{s}' : TROUVÉ (ID: {id_})")
-        #         else:
-        #             print(f"  - Token '{s}' : ❌ NON TROUVÉ (C'est peut-être lui le coupable)")
-
-        # except Exception as e:
-        #     print(f"❌ Impossible de charger le fichier : {e}")
         self.tokenizer_decoder = Tokenizer.from_file(tokenizer_decoder)
-        self.tokenizer_decoder.unk_token = "[UNK]"
         self.tokenizer_esm = AutoTokenizer.from_pretrained(esm_model_name, padding = 'max_length',
                                                             truncation = 'longest_first',
                                                              max_length = max_len)
@@ -61,14 +42,11 @@ class FinetuneDataset(Dataset):
         input_prot = str(row["translated_prot"])
         input_decoder = str(row["Input_context"]) + str(row["Target"])
 
-        print(f"DEBUG:INPUT_DECODER {input_decoder}, et INPUT_PROT {input_prot}")
 
         encoded_input_decoder = self.tokenizer_decoder.encode(input_decoder)
         input_ids_prot = self.tokenizer_esm.encode(input_prot)
 
         input_ids_decoder = encoded_input_decoder.ids
-        print(input_ids_decoder)
-        print(self.tokenizer_decoder.decode(input_ids_decoder))
         input_ids_decoder = torch.tensor(input_ids_decoder, dtype = torch.long)
         input_ids_prot = torch.tensor(input_ids_prot, dtype = torch.long)
         prot_mask = (input_ids_prot != 0).long()
@@ -118,7 +96,6 @@ if __name__ == "__main__":
 
         print(f"Shape Protéine IDs : {prot_ids.shape} (Type: {prot_ids.dtype})")
         print(f"Shape Protéine Mask: {prot_mask.shape}")
-        print(f"Shape Decoder Input: {dec_input.shape} (Type: {dec_input.dtype})")
 
         # Vérification visuelle
         print(f"\nExemple de masque (10 premiers) : {prot_mask[:10].tolist()}")

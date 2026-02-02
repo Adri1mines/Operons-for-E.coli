@@ -3,6 +3,30 @@ import torch.nn as nn
 from transformers import AutoTokenizer, EsmModel
 from processor import DNAProcessor
 
+def load_compiled_checkpoint(checkpoint_path, model_class):
+    # 1. Charger le fichier brut (sur CPU pour éviter de saturer la VRAM)
+    checkpoint = torch.load(checkpoint_path, map_location="cpu")
+    
+    # 2. Récupérer le dictionnaire de poids
+    state_dict = checkpoint["state_dict"]
+    
+    # 3. Créer un nouveau dictionnaire "propre"
+    new_state_dict = {}
+    for key, value in state_dict.items():
+        # L'astuce est ici : on supprime "_orig_mod." s'il est présent
+        new_key = key.replace("_orig_mod.", "")
+        new_state_dict[new_key] = value
+        
+    # 4. Instancier le modèle avec les hyperparamètres sauvegardés
+    # (Cela suppose que tu as utilisé self.save_hyperparameters() dans ton __init__)
+    hparams = checkpoint.get("hyper_parameters", {})
+    model = model_class(**hparams)
+    
+    # 5. Charger les poids nettoyés
+    model.load_state_dict(new_state_dict)
+    
+    return model
+
 class ProteinGuidedGen(nn.Module):
 
     def __init__(self, dna_decoder_filepath, esm_model_name="facebook/esm2_t6_8M_UR50D", freeze_esm=True):
@@ -27,30 +51,6 @@ class ProteinGuidedGen(nn.Module):
             for param in self.esm.parameters():
                 param.requires_grad = False
 
-
-    def load_compiled_checkpoint(checkpoint_path, model_class):
-        # 1. Charger le fichier brut (sur CPU pour éviter de saturer la VRAM)
-        checkpoint = torch.load(checkpoint_path, map_location="cpu")
-        
-        # 2. Récupérer le dictionnaire de poids
-        state_dict = checkpoint["state_dict"]
-        
-        # 3. Créer un nouveau dictionnaire "propre"
-        new_state_dict = {}
-        for key, value in state_dict.items():
-            # L'astuce est ici : on supprime "_orig_mod." s'il est présent
-            new_key = key.replace("_orig_mod.", "")
-            new_state_dict[new_key] = value
-            
-        # 4. Instancier le modèle avec les hyperparamètres sauvegardés
-        # (Cela suppose que tu as utilisé self.save_hyperparameters() dans ton __init__)
-        hparams = checkpoint.get("hyper_parameters", {})
-        model = model_class(**hparams)
-        
-        # 5. Charger les poids nettoyés
-        model.load_state_dict(new_state_dict)
-        
-        return model
                 
     def forward(self, protein_input, protein_attention_mask, decoder_input):
         """

@@ -1,6 +1,6 @@
 import os
 import json
-from tokenizers import Tokenizer
+from tokenizers import Tokenizer, pre_tokenizers, Regex
 from tokenizers.models import Unigram
 from tokenizers.trainers import UnigramTrainer
 from tokenizers.pre_tokenizers import Whitespace
@@ -39,12 +39,12 @@ def main():
 
     bases = ["A", "C", "G", "T"]
     special_tokens = [
-        "[UNK]",       # Inconnu (Indispensable)
-        "[CLS]",       # Start of Sequence (ou [START_CTX])
-        "[SEP]",       # Separator (ou [END_CTX])
+        "[UNK]",       # Inconnu
+        "[CLS]",       # Start of Sequence 
+        "[SEP]",       # Separator 
         "[PAD]",       # Padding
-        "[MASK]",      # Pour le pre-training
-        "[PROM]",      # Tes tokens biologiques
+        "[MASK]",
+        "[PROM]",      #tokens pour annotations bio
         "[RBS]",
         "[CDS]",
         "[TERM]"
@@ -62,8 +62,16 @@ def main():
     # 3. Entraînement
     print(f"Entraînement sur {CLEAN_GENOME_PATH}...")
     tokenizer.train_from_iterator(training_iterator_sampled(CLEAN_GENOME_PATH), trainer=trainer)
-    
-    # 5. SAUVEGARDE !
+
+    #ajout du preprocessing
+    tokenizer.pre_tokenizer = pre_tokenizers.Sequence([
+    pre_tokenizers.WhitespaceSplit(),
+    pre_tokenizers.Split(
+        pattern=Regex(r"\[[^\]]+\]"), 
+        behavior="isolated"           
+    )
+])
+
     tokenizer.save(TOKENIZER_PATH)
     print(f"Tokenizer sauvegardé sous : {TOKENIZER_PATH}")
 

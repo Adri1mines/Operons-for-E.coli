@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader, Subset
 # --- IMPORTS DE TON CODE ---
 # Ajuste les chemins selon ta structure de dossiers
 from model.processor import DNAProcessor 
-from dataset.dataset import PretrainDataset
+from dataset.pretrain.dataset import PretrainDataset
 from callbacks.bio_test import BioEvalCallback
 
 # --- MOCK CLASSES (Pour simuler WandB sans le lancer) ---
