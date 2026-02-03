@@ -143,7 +143,7 @@ class DNAProcessor(pl.LightningModule):
             div_factor=25,  # Le LR de départ sera max_lr / 25
             final_div_factor=1000 # Le LR final sera minime
             )
-        return optimizer {
+        return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": scheduler,

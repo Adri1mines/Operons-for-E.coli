@@ -8,7 +8,7 @@ lightning
 wandb
 loguru
 rotary-embedding-torch
-bioython
+Bioython
 matplotlib
 pandas
 transformers
