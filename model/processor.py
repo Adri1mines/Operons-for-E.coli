@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import json
 from tqdm import tqdm
-from model.model import DNATransformerLlama
+from model.model_decoder import DNATransformerLlama
 from tokenizers import Tokenizer
 
 CONFIG_PATH = "config.json"

@@ -94,7 +94,7 @@ class DNATransformerLlama(nn.Module):
         self.output_head = nn.Linear(d_model, vocab_size)
         self.output_head.weight = self.token_embedding.weight
 
-    def forward(self, x = None, input_embeds = None, context = None):
+    def forward(self, x, input_embeds = None, context = None):
             
         x = self.token_embedding(x)
         
