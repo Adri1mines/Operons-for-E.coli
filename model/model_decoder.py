@@ -56,7 +56,7 @@ class RoPEAttentionBlock(nn.Module):
     
 
 
-class TransformerBlock(nn.Module):
+class TransformerBlockWCross(nn.Module):
     """Un bloc complet : Norm -> Attention -> Add -> Norm -> FFN -> Add"""
     def __init__(self, d_model, n_head):
         super().__init__()
@@ -66,11 +66,18 @@ class TransformerBlock(nn.Module):
         self.norm2 = nn.RMSNorm(d_model)
         self.swiglu = SwiGLU(d_model, 4*d_model)
 
-    def forward(self, x):
+        self.cross_attention = nn.MultiHeadAttention(d_model, n_head, batch_first=True)
+        self.norm3 = nn.RMSNorm(d_model)
+
+    def forward(self, x, context = None):
         # Connexion résiduelle 1 (Pre-Norm architecture)
         x = x + self.attn(self.norm1(x))
         # Connexion résiduelle 2
         x = x + self.swiglu(self.norm2(x))
+
+        if context is not None:
+            cross_out, _ = self.cross_attn(query=x, key=context, value=context)
+            x = self.norm3(x + cross_out)
         return x
 
 class DNATransformerLlama(nn.Module):
@@ -80,24 +87,19 @@ class DNATransformerLlama(nn.Module):
         
         # Création de la liste de couches (Empilement)
         self.layers = nn.ModuleList([
-            TransformerBlock(d_model, n_head) for _ in range(num_layers)
+            TransformerBlockWCross(d_model, n_head) for _ in range(num_layers)
         ])
         
-        self.final_norm = nn.LayerNorm(d_model)
+        self.final_norm = nn.RMSNorm(d_model)
         self.output_head = nn.Linear(d_model, vocab_size)
         self.output_head.weight = self.token_embedding.weight
 
-    def forward(self, x = None, input_embeds = None):
-        if x is not None:
-            x = self.token_embedding(x)
-        else:
-            if input_embeds is None:
-                raise ValueError("aucune valeur fournie")
-            else:
-                x = input_embeds
+    def forward(self, x = None, input_embeds = None, context = None):
+            
+        x = self.token_embedding(x)
         
         for layer in self.layers:
-            x = layer(x)
+            x = layer(x, context)
             
         x = self.final_norm(x)
         logits = self.output_head(x)
