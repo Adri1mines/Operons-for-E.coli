@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from model_encoder import ProteinEncoder
-from model_decoder import DNATransformerLlama
+from model.model_encoder import ProteinEncoder
+from model.model_decoder import DNATransformerLlama
 
 class ProteinGuidedGen(nn.Module):
 
@@ -21,7 +21,8 @@ class ProteinGuidedGen(nn.Module):
 
         if self.use_encoder:
             context = self.encoder(protein_ids, prot_mask)
-
+        else:
+            context = None
         x = self.decoder(x, context)
 
         return x

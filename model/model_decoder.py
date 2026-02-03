@@ -66,7 +66,7 @@ class TransformerBlockWCross(nn.Module):
         self.norm2 = nn.RMSNorm(d_model)
         self.swiglu = SwiGLU(d_model, 4*d_model)
 
-        self.cross_attention = nn.MultiHeadAttention(d_model, n_head, batch_first=True)
+        self.cross_attn = nn.MultiheadAttention(d_model, n_head, batch_first=True)
         self.norm3 = nn.RMSNorm(d_model)
 
     def forward(self, x, context = None):
@@ -92,7 +92,6 @@ class DNATransformerLlama(nn.Module):
         
         self.final_norm = nn.RMSNorm(d_model)
         self.output_head = nn.Linear(d_model, vocab_size)
-        self.output_head.weight = self.token_embedding.weight
 
     def forward(self, x, input_embeds = None, context = None):
             

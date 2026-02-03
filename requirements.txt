@@ -12,3 +12,4 @@ bioython
 matplotlib
 pandas
 transformers
+torchinfo

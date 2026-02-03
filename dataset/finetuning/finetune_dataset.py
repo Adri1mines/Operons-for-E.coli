@@ -14,9 +14,9 @@ with open(CONFIG_PATH, 'r') as f:
 
 class FinetuneDataset(Dataset):
 
-    def __init__(self, finetune_data_path = config_param["finetune"]["data_finetune_filepath"], 
+    def __init__(self, finetune_data_path = config_param["finetuning"]["data_finetune_filepath"], 
                  tokenizer_decoder = config_param["tokenizer"]["tokenizer_filepath"], 
-                 esm_model_name = config_param["tokenizer"]["esm_model_name"],
+                 esm_model_name = config_param["finetuning"]["esm_model_name"],
                  max_len = config_param["model"]["max_len"]):
         self.tokenizer_decoder = Tokenizer.from_file(tokenizer_decoder)
         self.tokenizer_esm = AutoTokenizer.from_pretrained(esm_model_name, padding = 'max_length',

@@ -8,8 +8,9 @@ python3 train.py \
     --wandb_team_name= "Adrien_LM" \
     --config_path="config.json" \
     --num_epochs=6 \
-    --batch_size=64 \
+    --batch_size=48 \
+    --learning_rate=5e-4 \
     --model_save_name="dna_model_llamafied_pretrain" \
     --seed=42 \
     --num_workers=4 \
-    --finfetuning= False
+    --finetuning=False

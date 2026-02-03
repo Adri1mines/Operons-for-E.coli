@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import json
 from tqdm import tqdm
-from hybrid_model import ProteinGuidedGen
+from model.hybrid_model import ProteinGuidedGen
 from tokenizers import Tokenizer
 from transformers import AutoTokenizer
 
@@ -38,7 +38,7 @@ class DNAProcessor(pl.LightningModule):
                                                             truncation = 'longest_first',
                                                              max_length = config_param["model"]["max_len"])
         self.wandb_run_id = None
-        self.loss = nn.CrossEntropyLoss(ignore_index = self.pad_token)
+        self.loss = nn.CrossEntropyLoss(ignore_index = config_param["tokenizer"]["pad_token_id"])
         self.use_encoder = use_encoder
 
     def forward (self, x, protein_input = None, prot_mask = None):
@@ -85,15 +85,15 @@ class DNAProcessor(pl.LightningModule):
             length += 1
 
         generated_strings = []
-        sep_token_id = self.tokenizer.token_to_id("[SEP]")
-        special_tokens = [self.tokenizer.token_to_id(token) for token
-                         in ["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"]]
+        sep_token_id = self.tokenizer_decoder.token_to_id("[SEP]")
+        special_tokens = [self.tokenizer_decoder.token_to_id(token) for token
+                         in ["[UNK]", "[CLS]", "[PAD]", "[MASK]"]]
         for seq in seqs:
             seq_list = seq.tolist()
             for special_token in special_tokens:
                 if special_token in seq_list:
                     seq_list.remove(special_token)
-            decoded = self.tokenizer.decode(seq_list, skip_special_tokens = False) 
+            decoded = self.tokenizer_decoder.decode(seq_list, skip_special_tokens = False) 
             generated_strings.append(decoded)
             if sep_token_id in seq_list:
                 # On coupe tout ce qui dépasse après le premier [SEP]
@@ -137,17 +137,17 @@ class DNAProcessor(pl.LightningModule):
 
         scheduler = torch.optim.lr_scheduler.OneCycleLR(
             optimizer,
-            max_lr=self.params["training"]["learning_rate"],
+            max_lr=self.lr,
             total_steps=total_steps,
             pct_start=0.1,  # 10% du temps en Warmup (montée), 90% en descente
             div_factor=25,  # Le LR de départ sera max_lr / 25
             final_div_factor=1000 # Le LR final sera minime
             )
-        return {
+        return optimizer {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": scheduler,
-                "interval": "step", # IMPORTANT : On met à jour à chaque BATCH, pas chaque époque
+                "interval": "step", 
                 "frequency": 1
             },
         }

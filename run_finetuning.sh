@@ -9,7 +9,8 @@ python3 train.py \
     --config_path="config.json" \
     --num_epochs=2 \
     --batch_size=16 \
+    --learning_rate=1e-4 \
     --model_save_name="dna_model_llamafied_finetuned" \
     --seed=42 \
     --num_workers=4 \
-    --finfetuning= True
+    --finetuning=True

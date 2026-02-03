@@ -1,6 +1,7 @@
 import os
+from torchinfo import summary
 from dataset.pretrain.dataset import PretrainDataset
-from dataset.finetune.dataset import FinetuneDataset
+from dataset.finetuning.finetune_dataset import FinetuneDataset
 from model.processor import DNAProcessor
 import torch
 from torch.utils.data import DataLoader, Dataset, random_split
@@ -25,8 +26,8 @@ flags.DEFINE_integer("seed", 42, "Random seed")
 flags.DEFINE_integer("batch_size", 32, "Batch size")
 flags.DEFINE_integer("num_workers", 2, "Number of DataLoader workers")
 flags.DEFINE_integer("prefetch_factor", 2, "Number of batches to prefetch")
-flags.DEFINE_integer("learning_rate", 1e-4, "max learning rate")
-flags.DEFINE_integer("weight_decay", 1e-2, "weight decay")
+flags.DEFINE_float("learning_rate", 1e-4, "max learning rate")
+flags.DEFINE_float("weight_decay", 1e-2, "weight decay")
 flags.DEFINE_string(
     "model_save_name", None, "Name to save the checkpoint during training"
 )
@@ -39,7 +40,7 @@ flags.DEFINE_bool(
 flags.DEFINE_string(
     "config_path", None, "Path to the training parameters JSON file"
 )
-flags.DEFINE_string(
+flags.DEFINE_bool(
     "finetuning", False, "if training is in finetuning mode or not"
 )
 
@@ -125,16 +126,17 @@ def main(argv):
     verbose=True,
     mode="min")
 
-    wandb_logger.experiment.config.update(
-        {
-            "architecture": config_param["model"]["type"],
-            "d_model": config_param["model"]["d_model"],
-            "n_head": config_param["model"]["n_head"],
-            "context_size": config_param["model"]["max_len"],
-            "max_lr": lr,
-            "batch_size": batch_size,
-        }
+    model_stats = summary(
+        lightning_module.model, 
+        input_data=torch.randint(5, (batch_size, 128)), # Si trop complexe, laisse None, mais shapes seront absentes
+ 
+        verbose=0,
+        depth = 5
     )
+
+    print(model_stats)
+    wandb_logger.experiment.log({"model_summary": str(model_stats)})
+
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
         callbacks=[checkpoint_callback, lr_monitor, bio_eval_callback, early_stop_callback], # Connecte la sauvegarde et le moniteur de LR
@@ -143,7 +145,7 @@ def main(argv):
         devices=1,
         precision = "bf16-mixed",
         log_every_n_steps=10,                # Fréquence de log pour WandB
-        val_check_interval=1.0,            # Vérifie la validation à chaque fin d'époque
+        val_check_interval=1.0,
     )
     logger.info("Starting training...")
     trainer.fit(

@@ -27,6 +27,8 @@ wandb/
 #pycache
 dataset/__pycache__
 model/__pycache__
+dataset/pretrain/__pycache__
+dataset/finetuning/__pycache__
 callbacks/__pycache__
 #checkpoints
 checkpoints/
