@@ -120,19 +120,19 @@ class BioEvalCallback(Callback):
         kmer_score = np.sqrt(kmer_error) # Plus c'est bas, mieux c'est
 
         # 3. Métrique ORF
-        orf_lengths = [self._get_max_orf_length(s) for s in gen_seqs]
-        avg_orf_len = np.mean(orf_lengths)
+        # orf_lengths = [self._get_max_orf_length(s) for s in gen_seqs]
+        # avg_orf_len = np.mean(orf_lengths)
         
         # 4. Métrique Shine-Dalgarno (Bonus E. coli)
-        sd_count = sum([s.count("AGGAGG") for s in gen_seqs])
-        sd_density = sd_count / len(gen_seqs)
+        # sd_count = sum([s.count("AGGAGG") for s in gen_seqs])
+        # sd_density = sd_count / len(gen_seqs)
 
         # 5. Logging
         metrics = {
             "bio/kmer_distance": kmer_score,   # Doit descendre
-            "bio/avg_orf_length": avg_orf_len, # Doit monter (se rapprocher de ~300-500)
+            # "bio/avg_orf_length": avg_orf_len, # Doit monter (se rapprocher de ~300-500)
             "bio/real_orf_ref": self.ref_orf_len,
-            "bio/shine_dalgarno_density": sd_density,
+            # "bio/shine_dalgarno_density": sd_density,
             "bio/generated_gc_avg": avg_gen_gc,
             "bio/real_gc_ref": self.real_gc,
             "bio/gc_error": gc_error,

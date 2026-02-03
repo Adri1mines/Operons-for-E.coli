@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Lancement de l'entraînement du DNA Transformer..."
+echo "Lancement du préentraînement du DNA Transformer..."
 
 
 python3 train.py \
@@ -9,6 +9,7 @@ python3 train.py \
     --config_path="config.json" \
     --num_epochs=6 \
     --batch_size=64 \
-    --model_save_name="dna_model_llamafied_med" \
+    --model_save_name="dna_model_llamafied_pretrain" \
     --seed=42 \
-    --num_workers=4 
+    --num_workers=4 \
+    --finfetuning= False
