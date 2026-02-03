@@ -1,5 +1,6 @@
 import os
 from dataset.pretrain.dataset import PretrainDataset
+from dataset.finetune.dataset import FinetuneDataset
 from model.processor import DNAProcessor
 import torch
 from torch.utils.data import DataLoader, Dataset, random_split
@@ -22,9 +23,10 @@ flags.DEFINE_string("wandb_team_name", "my_team", "Name of the team")
 flags.DEFINE_integer("num_epochs", 10, "Number of epochs")
 flags.DEFINE_integer("seed", 42, "Random seed")
 flags.DEFINE_integer("batch_size", 32, "Batch size")
-flags.DEFINE_integer("warmup", 1000, "Learning rate warmup steps")
 flags.DEFINE_integer("num_workers", 2, "Number of DataLoader workers")
 flags.DEFINE_integer("prefetch_factor", 2, "Number of batches to prefetch")
+flags.DEFINE_integer("learning_rate", 1e-4, "max learning rate")
+flags.DEFINE_integer("weight_decay", 1e-2, "weight decay")
 flags.DEFINE_string(
     "model_save_name", None, "Name to save the checkpoint during training"
 )
@@ -36,6 +38,9 @@ flags.DEFINE_bool(
 )
 flags.DEFINE_string(
     "config_path", None, "Path to the training parameters JSON file"
+)
+flags.DEFINE_string(
+    "finetuning", False, "if training is in finetuning mode or not"
 )
 
 def main(argv):
@@ -60,7 +65,6 @@ def main(argv):
     wandb_project_name = FLAGS.project_name
     num_epochs = FLAGS.num_epochs
     batch_size = FLAGS.batch_size
-    warmup = FLAGS.warmup
     num_workers = FLAGS.num_workers
     prefetch_factor = FLAGS.prefetch_factor
     model_save_name = FLAGS.model_save_name
@@ -68,27 +72,32 @@ def main(argv):
     resume_training = FLAGS.resume_training
     wandb_team_name = FLAGS.wandb_team_name
     seed = FLAGS.seed
+    finetuning = FLAGS.finetuning
+    lr = FLAGS.learning_rate
+    weight_decay = FLAGS.weight_decay
 
     generator = torch.Generator().manual_seed(seed)
 
-    full_dataset = PretrainDataset()
+    if not finetuning:
+        full_dataset = PretrainDataset()
+    else:
+        full_dataset = FinetuneDataset()
 
     val_size = int(config_param["data"]["val_dataset_size"]*len(full_dataset))
     train_size = len(full_dataset)-val_size
 
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator = generator)
 
-    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator)
-    val_dataloader = DataLoader(val_dataset, batch_size = batch_size)
+    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator, num_workers = num_workers, prefetch_factor = prefetch_factor)
+    val_dataloader = DataLoader(val_dataset, batch_size = batch_size, num_workers = num_workers, prefetch_factor = prefetch_factor)
 
     if model_path and os.path.isfile(model_path):
         logger.info(f"Loading model from checkpoint: {model_path}")
         lightning_module = DNAProcessor.load_from_checkpoint(checkpoint_path=model_path)
-        lightning_module.model = torch.compile(lightning_module.model)
         logger.info(f"Resuming WandB run: {lightning_module.wandb_run_id}")
     else:
         logger.info("Initializing new model")
-        lightning_module = DNAProcessor()
+        lightning_module = DNAProcessor(config_param, lr = lr, weight_decay= weight_decay, use_encoder = finetuning)
 
     # Initialize WandbLogger
     if resume_training:
@@ -122,7 +131,7 @@ def main(argv):
             "d_model": config_param["model"]["d_model"],
             "n_head": config_param["model"]["n_head"],
             "context_size": config_param["model"]["max_len"],
-            "max_lr": config_param["training"]["learning_rate"],
+            "max_lr": lr,
             "batch_size": batch_size,
         }
     )
