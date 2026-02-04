@@ -44,6 +44,7 @@ flags.DEFINE_bool(
     "finetuning", False, "if training is in finetuning mode or not"
 )
 flags.DEFINE_string("compile_mode", "Auto", "Compile mode of torch.compile")
+flags.DEFINE_string("pretrain_model_path", "checkpoints/dna_model_llamafied_pretrain.ckpt", "pretrained model path")
 
 def main(argv):
     del argv
@@ -78,6 +79,7 @@ def main(argv):
     lr = FLAGS.learning_rate
     weight_decay = FLAGS.weight_decay
     compile_mode = FLAGS.compile_mode
+    pretrain_model_path = FLAGS.pretrain_model_path
 
     generator = torch.Generator().manual_seed(seed)
 
@@ -91,8 +93,8 @@ def main(argv):
 
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator = generator)
 
-    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator, num_workers = num_workers, prefetch_factor = prefetch_factor)
-    val_dataloader = DataLoader(val_dataset, batch_size = batch_size, num_workers = num_workers, prefetch_factor = prefetch_factor)
+    train_dataloader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True, generator = generator, num_workers = 2)#, prefetch_factor = prefetch_factor)
+    val_dataloader = DataLoader(val_dataset, batch_size = batch_size, num_workers = 2)#, prefetch_factor = prefetch_factor)
 
     if model_path and os.path.isfile(model_path):
         logger.info(f"Loading model from checkpoint: {model_path}")
@@ -100,7 +102,10 @@ def main(argv):
         logger.info(f"Resuming WandB run: {lightning_module.wandb_run_id}")
     else:
         logger.info("Initializing new model")
-        lightning_module = DNAProcessor(config_param, lr = lr, weight_decay= weight_decay, use_encoder = finetuning)
+        if finetuning:
+            lightning_module = DNAProcessor(config_param, lr = lr, weight_decay= weight_decay, use_encoder = True, pretrained_checkpoint_path = pretrain_model_path)
+        else:    
+            lightning_module = DNAProcessor(config_param, lr = lr, weight_decay= weight_decay, use_encoder = False)
 
     # Initialize WandbLogger
     if resume_training:
@@ -119,8 +124,8 @@ def main(argv):
     else:
         checkpoint_callback = ModelCheckpoint(dirpath="checkpoints")
     lr_monitor = LearningRateMonitor(logging_interval="step")
-    bio_eval_callback = BioEvalCallback(tokenizer_path = config_param["tokenizer"]["tokenizer_filepath"], 
-                                        val_dataset=val_dataset)
+    # bio_eval_callback = BioEvalCallback(tokenizer_path = config_param["tokenizer"]["tokenizer_filepath"], 
+                                        # val_dataset=val_dataset)
     early_stop_callback = EarlyStopping(
     monitor="bio/global_score",  # On surveille la loss de validation
     min_delta=0.00,      # Il faut que ça s'améliore un minimum
@@ -128,21 +133,21 @@ def main(argv):
     verbose=True,
     mode="min")
 
-    model_stats = summary(
-        lightning_module.model, 
-        input_data=torch.randint(5, (batch_size, 128)), # Si trop complexe, laisse None, mais shapes seront absentes
+    # model_stats = summary(
+    #     lightning_module.model, 
+    #     input_data=torch.randint(5, (batch_size, 128)), # Si trop complexe, laisse None, mais shapes seront absentes
  
-        verbose=0,
-        depth = 5
-    )
+    #     verbose=0,
+    #     depth = 5
+    # )
 
-    print(model_stats)
-    wandb_logger.experiment.log({"model_summary": str(model_stats)})
+    # print(model_stats)
+    # wandb_logger.experiment.log({"model_summary": str(model_stats)})
 
     lightning_module.model = torch.compile(lightning_module.model, compile_mode)
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
-        callbacks=[checkpoint_callback, lr_monitor, bio_eval_callback, early_stop_callback], # Connecte la sauvegarde et le moniteur de LR
+        callbacks=[checkpoint_callback, lr_monitor], #bio_eval_callback, early_stop_callback], # Connecte la sauvegarde et le moniteur de LR
         max_epochs=num_epochs,
         accelerator="gpu",                  # Choisit GPU/CPU tout seul
         devices=1,

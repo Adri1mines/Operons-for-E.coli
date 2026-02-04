@@ -21,7 +21,7 @@ class FinetuneDataset(Dataset):
         self.tokenizer_decoder = Tokenizer.from_file(tokenizer_decoder)
         self.tokenizer_esm = AutoTokenizer.from_pretrained(esm_model_name, padding = 'max_length',
                                                             truncation = 'longest_first',
-                                                             max_length = max_len)
+                                                             model_max_length = max_len)
         self.tokenizer_decoder.enable_padding(
             direction='right',
             pad_id= self.tokenizer_decoder.token_to_id("[PAD]"), 
@@ -30,7 +30,7 @@ class FinetuneDataset(Dataset):
         )
         self.tokenizer_decoder.enable_truncation(max_length=max_len)
         self.finetune_data = pd.read_csv(finetune_data_path, sep = ",")
-
+        self.max_len = max_len
 
     def __len__(self):
         return len(self.finetune_data)
@@ -38,21 +38,26 @@ class FinetuneDataset(Dataset):
 
     def __getitem__(self, idx):
         
-        row = self.finetune_data.iloc[idx]
+        row = self.finetune_data.iloc[idx].copy(deep = True)
         input_prot = str(row["translated_prot"])
         input_decoder = str(row["Input_context"]) + str(row["Target"])
 
 
         encoded_input_decoder = self.tokenizer_decoder.encode(input_decoder)
-        input_ids_prot = self.tokenizer_esm.encode(input_prot)
-
-        input_ids_decoder = encoded_input_decoder.ids
-        input_ids_decoder = torch.tensor(input_ids_decoder, dtype = torch.long)
-        input_ids_prot = torch.tensor(input_ids_prot, dtype = torch.long)
-        prot_mask = (input_ids_prot != 0).long()
-        return({"input_protein": input_ids_prot,
-                "protein_attention_mask": prot_mask,
-                 "input_decoder": input_decoder})
+        encoded_prot = self.tokenizer_esm(
+            input_prot,
+            padding="max_length",       # <--- On force le padding ICI
+            truncation=True,            # <--- On force la coupe ICI
+            max_length=self.max_len, # ex: 512
+            return_tensors="pt"         # <--- On demande du PyTorch direct
+        )
+        input_ids_prot = encoded_prot["input_ids"].squeeze(0)
+        prot_mask = encoded_prot["attention_mask"].squeeze(0)
+        input_ids_decoder_list = list(encoded_input_decoder.ids)
+        input_ids_decoder_final = torch.tensor(input_ids_decoder_list, dtype = torch.long)
+        return({"input_protein": input_ids_prot.clone().detach(),
+                "protein_attention_mask": prot_mask.clone().detach(),
+                 "input_decoder": input_ids_decoder_final})
 
 
 if __name__ == "__main__":

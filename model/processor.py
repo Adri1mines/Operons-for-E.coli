@@ -41,8 +41,8 @@ class DNAProcessor(pl.LightningModule):
         self.loss = nn.CrossEntropyLoss(ignore_index = config_param["tokenizer"]["pad_token_id"])
         self.use_encoder = use_encoder
 
-    def forward (self, x, protein_input = None, prot_mask = None):
-        return self.model(x, protein_input, prot_mask)
+    def forward (self, x, protein_ids = None, prot_mask = None):
+        return self.model(x, protein_ids, prot_mask)
 
 
     def training_step(self, batch, _):
@@ -53,7 +53,7 @@ class DNAProcessor(pl.LightningModule):
             prot_mask = batch['protein_attention_mask']
             input = x[:, :-1]
             # Le modèle gère l'injection de contexte
-            logits = self(input, prot_input, prot_mask)
+            logits = self(x = input, protein_ids = prot_input, prot_mask = prot_mask)
         else:
             x = batch
             input = x[:, :-1]

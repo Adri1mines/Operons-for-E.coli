@@ -13,4 +13,5 @@ python3 train.py \
     --model_save_name="dna_model_llamafied_finetuned" \
     --seed=42 \
     --num_workers=4 \
-    --finetuning=True
+    --finetuning=True \
+    --pretrain_model_path="checkpoints/dna_model_llamafied_pretrain.ckpt" \

@@ -20,11 +20,8 @@ class ProteinEncoder(nn.Module):
                 param.requires_grad = False
 
                 
-    def forward(self, protein_input, protein_attention_mask, decoder_input):
-        """
-        protein_input_ids: Tokens des protéines (Tokenisés par ESM tokenizer)
-        dna_input_ids: Tokens de l'opéron (Tokenisés par TON tokenizer DNA)
-        """
+    def forward(self, protein_input, protein_attention_mask):
+
 
         with torch.no_grad(): # Pas de gradient pour ESM
             esm_outputs = self.esm(input_ids=protein_input, attention_mask=protein_attention_mask)
