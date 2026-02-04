@@ -13,4 +13,5 @@ python3 train.py \
     --model_save_name="dna_model_llamafied_pretrain" \
     --seed=42 \
     --num_workers=4 \
+    --compile_mode="Auto" \
     --finetuning=False

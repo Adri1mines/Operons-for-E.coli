@@ -43,7 +43,7 @@ flags.DEFINE_string(
 flags.DEFINE_bool(
     "finetuning", False, "if training is in finetuning mode or not"
 )
-flags.DEFINE_str("compile_mode", "Auto", "Compile mode of torch.compile")
+flags.DEFINE_string("compile_mode", "Auto", "Compile mode of torch.compile")
 
 def main(argv):
     del argv
