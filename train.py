@@ -43,6 +43,7 @@ flags.DEFINE_string(
 flags.DEFINE_bool(
     "finetuning", False, "if training is in finetuning mode or not"
 )
+flags.DEFINE_str("compile_mode", "Auto", "Compile mode of torch.compile")
 
 def main(argv):
     del argv
@@ -76,6 +77,7 @@ def main(argv):
     finetuning = FLAGS.finetuning
     lr = FLAGS.learning_rate
     weight_decay = FLAGS.weight_decay
+    compile_mode = FLAGS.compile_mode
 
     generator = torch.Generator().manual_seed(seed)
 
@@ -122,7 +124,7 @@ def main(argv):
     early_stop_callback = EarlyStopping(
     monitor="bio/global_score",  # On surveille la loss de validation
     min_delta=0.00,      # Il faut que ça s'améliore un minimum
-    patience=2,          # Si ça ne s'améliore pas pendant 2 checks (epochs), on coupe
+    patience=3,          # Si ça ne s'améliore pas pendant 2 checks (epochs), on coupe
     verbose=True,
     mode="min")
 
@@ -137,6 +139,7 @@ def main(argv):
     print(model_stats)
     wandb_logger.experiment.log({"model_summary": str(model_stats)})
 
+    lightning_module.model = torch.compile(lightning_module.model, compile_mode)
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
         callbacks=[checkpoint_callback, lr_monitor, bio_eval_callback, early_stop_callback], # Connecte la sauvegarde et le moniteur de LR

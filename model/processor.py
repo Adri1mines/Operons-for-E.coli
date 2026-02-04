@@ -44,6 +44,7 @@ class DNAProcessor(pl.LightningModule):
     def forward (self, x, protein_input = None, prot_mask = None):
         return self.model(x, protein_input, prot_mask)
 
+
     def training_step(self, batch, _):
         if self.use_encoder:
             # Mode Finetune (Dataset complet)
@@ -127,6 +128,20 @@ class DNAProcessor(pl.LightningModule):
 
     def on_load_checkpoint(self, checkpoint):
         self.wandb_run_id = checkpoint.get("wandb_run_id")
+        state_dict = checkpoint["state_dict"]
+        new_state_dict = {}
+        
+        
+        for k, v in state_dict.items():
+            # Le préfixe ajouté par torch.compile est généralement "_orig_mod."
+            if "_orig_mod." in k:
+                clean_key = k.replace("_orig_mod.", "")
+                new_state_dict[clean_key] = v
+            else:
+                new_state_dict[k] = v
+        
+        # On remplace le dictionnaire par la version propre
+        checkpoint["state_dict"] = new_state_dict
 
     def configure_optimizers(self):
 
