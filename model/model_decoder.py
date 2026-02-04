@@ -93,7 +93,7 @@ class DNATransformerLlama(nn.Module):
         self.final_norm = nn.RMSNorm(d_model)
         self.output_head = nn.Linear(d_model, vocab_size)
 
-    def forward(self, x, input_embeds = None, context = None):
+    def forward(self, x, context = None):
             
         x = self.token_embedding(x)
         

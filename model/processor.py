@@ -44,6 +44,47 @@ class DNAProcessor(pl.LightningModule):
     def forward (self, x, protein_ids = None, prot_mask = None):
         return self.model(x, protein_ids, prot_mask)
 
+    def _apply_word_dropout(self, input_ids, prob=0.5):
+        """
+        Applique le masquage aléatoire sur les inputs.
+        Args:
+            input_ids: Tensor (Batch, Seq_Len)
+            prob: Probabilité de masquer un token
+        Returns:
+            masked_input_ids: Tensor avec des [MASK]
+        """
+        # 1. On clone pour ne surtout pas toucher à l'original (qui sert de target)
+        masked_ids = input_ids.clone()
+        
+        # 2. Création du masque de probabilité
+        # On crée une matrice de probas sur le même device que les données
+        probs = torch.full(masked_ids.shape, prob, device=self.device)
+        
+        # 3. Protection des tokens spéciaux (OPTIONNEL mais recommandé)
+        # On ne veut pas masquer [CLS], [SEP], [PAD] car ils structurent la phrase
+        special_tokens = [
+            self.tokenizer_decoder.token_to_id("[CLS]"),
+            self.tokenizer_decoder.token_to_id("[SEP]"),
+            self.tokenizer_decoder.token_to_id("[PAD]"),
+            self.tokenizer_decoder.token_to_id("[UNK]")
+        ]
+        
+        for special_id in special_tokens:
+            probs.masked_fill_(masked_ids == special_id, 0.0)
+            
+        # 4. Génération du masque booléen (Bernoulli)
+        mask_indices = torch.bernoulli(probs).bool()
+        
+        # 5. Remplacement par [MASK]
+        mask_token_id = self.tokenizer_decoder.token_to_id("[MASK]")
+        # Si pas de token MASK, on utilise un token rare ou 0
+        if mask_token_id is None: 
+            mask_token_id = 0 
+            
+        masked_ids[mask_indices] = mask_token_id
+        
+        return masked_ids
+
 
     def training_step(self, batch, _):
         if self.use_encoder:
@@ -52,8 +93,13 @@ class DNAProcessor(pl.LightningModule):
             prot_input = batch['input_protein']
             prot_mask = batch['protein_attention_mask']
             input = x[:, :-1]
+            do_masking = (torch.rand(1).item() < 0.0)
+            if do_masking:
+                processed_input = self._apply_word_dropout(input, prob=0.3)
             # Le modèle gère l'injection de contexte
-            logits = self(x = input, protein_ids = prot_input, prot_mask = prot_mask)
+            else:
+                processed_input = input
+            logits = self(x = processed_input, protein_ids = prot_input, prot_mask = prot_mask)
         else:
             x = batch
             input = x[:, :-1]
@@ -66,19 +112,24 @@ class DNAProcessor(pl.LightningModule):
         
     @torch.no_grad()
     def generate_sequences(self, n_sequence = 1, max_len = 1024, temp = 0.7,
-                            prompt_decoder = "", protein_input_not_tokenized = None):
+                            prompt_decoder = None, protein_input = None, prot_mask = None):
         self.model.eval()
         device = self.device
-        input = self.tokenizer_decoder.encode("[CLS]" + prompt_decoder).ids
-        seqs = torch.tensor([input]*n_sequence, device = device)
+        if prompt_decoder is None:
+            input = self.tokenizer_decoder.encode("[CLS]").ids
+            seqs = torch.tensor([input]*n_sequence, device = device)
+        else:
+            seqs = prompt_decoder
         length = seqs.size(1)
         print("Début de la génération de séquences...")
-        if protein_input_not_tokenized is not None:
-            protein_input = self.tokenizer_encoder(protein_input_not_tokenized)
+        if protein_input is not None:
+            protein_input = protein_input
+            prot_mask = prot_mask
         else:
             protein_input = None
+            prot_mask = None
         for i in tqdm(range(max_len-length)):
-            logits = self.model(seqs, protein_input)
+            logits = self(seqs, protein_input, prot_mask)
             last_logits = logits[:, -1, :]/temp
             probs = torch.softmax(last_logits, dim=-1)
             next_tokens = torch.multinomial(probs, num_samples=1)
@@ -86,20 +137,21 @@ class DNAProcessor(pl.LightningModule):
             length += 1
 
         generated_strings = []
-        sep_token_id = self.tokenizer_decoder.token_to_id("[SEP]")
+        sep_token = "[SEP]"
         special_tokens = [self.tokenizer_decoder.token_to_id(token) for token
-                         in ["[UNK]", "[CLS]", "[PAD]", "[MASK]"]]
-        for seq in seqs:
-            seq_list = seq.tolist()
+                         in ["[UNK]", "[CLS]", "[PAD]", "[MASK]","[START_CONTEXT]", "[TERM_INFERRED]", "[TERM_KNOWN]", "[END_CONTEXT]"]]
+        seqs_list = seqs.tolist()
+        for seq in seqs_list:
             for special_token in special_tokens:
-                if special_token in seq_list:
-                    seq_list.remove(special_token)
-            decoded = self.tokenizer_decoder.decode(seq_list, skip_special_tokens = False) 
-            generated_strings.append(decoded)
-            if sep_token_id in seq_list:
+                if special_token in seq:
+                    seq = [x for x in seq if x != special_token]
+            decoded = self.tokenizer_decoder.decode(seq, skip_special_tokens = False) 
+            if sep_token in decoded:
                 # On coupe tout ce qui dépasse après le premier [SEP]
-                end_index = seq_list.index(sep_token_id)
-                seq_list = seq_list[:end_index]
+                end_index = decoded.index(sep_token_id)
+                seq_list = decoded[:end_index]
+            generated_strings.append(decoded)
+
 
         self.model.train() 
         return generated_strings
@@ -145,8 +197,20 @@ class DNAProcessor(pl.LightningModule):
 
     def configure_optimizers(self):
 
-        optimizer = torch.optim.AdamW(self.model.parameters(),
-                                        lr= self.lr, 
+        if self.use_encoder:
+            connector_params = [] # Projecteur + Cross Attention
+            base_params = []      # Le reste (Décodeur, ESM...)
+
+            for name, param in self.model.named_parameters():
+                # Si le paramètre appartient à la "nouvelle" connexion
+                if "projector" in name or "cross_attn" in name:
+                    connector_params.append(param)
+                else:
+                    base_params.append(param)
+
+        optimizer = torch.optim.AdamW([
+            {'params': base_params, 'lr': self.lr},           # Vitesse normale
+            {'params': connector_params, 'lr': self.lr * 20}],
                                         weight_decay = self.weight_decay)
         total_steps = self.trainer.estimated_stepping_batches
 
