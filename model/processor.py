@@ -92,8 +92,8 @@ class DNAProcessor(pl.LightningModule):
             x = batch['input_decoder']
             prot_input = batch['input_protein']
             prot_mask = batch['protein_attention_mask']
+            do_masking = (torch.rand(1).item() < 0.30)
             input = x[:, :-1]
-            do_masking = (torch.rand(1).item() < 0.0)
             if do_masking:
                 processed_input = self._apply_word_dropout(input, prob=0.3)
             # Le modèle gère l'injection de contexte

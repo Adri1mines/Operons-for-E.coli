@@ -62,22 +62,23 @@ class TransformerBlockWCross(nn.Module):
         super().__init__()
         self.norm1 = nn.RMSNorm(d_model)
         self.attn = RoPEAttentionBlock(d_model, n_head)
+
+        self.cross_attn = nn.MultiheadAttention(d_model, n_head, batch_first=True)
+        self.norm3 = nn.RMSNorm(d_model)
         
         self.norm2 = nn.RMSNorm(d_model)
         self.swiglu = SwiGLU(d_model, 4*d_model)
 
-        self.cross_attn = nn.MultiheadAttention(d_model, n_head, batch_first=True)
-        self.norm3 = nn.RMSNorm(d_model)
-
     def forward(self, x, context = None):
         # Connexion résiduelle 1 (Pre-Norm architecture)
         x = x + self.attn(self.norm1(x))
-        # Connexion résiduelle 2
-        x = x + self.swiglu(self.norm2(x))
 
         if context is not None:
             cross_out, _ = self.cross_attn(query=x, key=context, value=context)
             x = self.norm3(x + cross_out)
+            
+        # Connexion résiduelle 2
+        x = x + self.swiglu(self.norm2(x))
         return x
 
 class DNATransformerLlama(nn.Module):
