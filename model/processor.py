@@ -96,7 +96,6 @@ class DNAProcessor(pl.LightningModule):
             input = x[:, :-1]
             if do_masking:
                 processed_input = self._apply_word_dropout(input, prob=0.3)
-            # Le modèle gère l'injection de contexte
             else:
                 processed_input = input
             logits = self(x = processed_input, protein_ids = prot_input, prot_mask = prot_mask)
@@ -158,12 +157,10 @@ class DNAProcessor(pl.LightningModule):
     
     def validation_step(self, batch, _):
         if self.use_encoder:
-            # Mode Finetune (Dataset complet)
             x = batch['input_decoder']
             prot_input = batch['input_protein']
             prot_mask = batch['protein_attention_mask']
             input = x[:, :-1]
-            # Le modèle gère l'injection de contexte
             logits = self(input, prot_input, prot_mask)
         else:
             x = batch
@@ -185,7 +182,7 @@ class DNAProcessor(pl.LightningModule):
         
         
         for k, v in state_dict.items():
-            # Le préfixe ajouté par torch.compile est généralement "_orig_mod."
+            # Le préfixe ajouté par torch.compile est "_orig_mod."
             if "_orig_mod." in k:
                 clean_key = k.replace("_orig_mod.", "")
                 new_state_dict[clean_key] = v
@@ -209,8 +206,8 @@ class DNAProcessor(pl.LightningModule):
                     base_params.append(param)
 
         optimizer = torch.optim.AdamW([
-            {'params': base_params, 'lr': self.lr},           # Vitesse normale
-            {'params': connector_params, 'lr': self.lr * 20}],
+            {'params': base_params, 'lr': self.lr},           
+            {'params': connector_params, 'lr': self.lr * 20}], #on booste les couches qui n'ont pas eu pretrain
                                         weight_decay = self.weight_decay)
         total_steps = self.trainer.estimated_stepping_batches
 

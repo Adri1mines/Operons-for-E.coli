@@ -124,35 +124,35 @@ def main(argv):
     else:
         checkpoint_callback = ModelCheckpoint(dirpath="checkpoints")
     lr_monitor = LearningRateMonitor(logging_interval="step")
-    # bio_eval_callback = BioEvalCallback(tokenizer_path = config_param["tokenizer"]["tokenizer_filepath"], 
-                                        # val_dataset=val_dataset)
+    bio_eval_callback = BioEvalCallback(tokenizer_path = config_param["tokenizer"]["tokenizer_filepath"], 
+                                        val_dataset=val_dataset)
     early_stop_callback = EarlyStopping(
-    monitor="bio/global_score",  # On surveille la loss de validation
-    min_delta=0.00,      # Il faut que ça s'améliore un minimum
-    patience=3,          # Si ça ne s'améliore pas pendant 2 checks (epochs), on coupe
+    monitor="bio/global_score",  # On surveille le score biologique et si ça s'améliore pas on arrête
+    min_delta=0.00,     
+    patience=3,         
     verbose=True,
     mode="min")
 
-    # model_stats = summary(
-    #     lightning_module.model, 
-    #     input_data=torch.randint(5, (batch_size, 128)), # Si trop complexe, laisse None, mais shapes seront absentes
+    model_stats = summary(
+        lightning_module.model, 
+        input_data=torch.randint(5, (batch_size, 128)), # Si trop complexe, laisse None, mais shapes seront absentes
  
-    #     verbose=0,
-    #     depth = 5
-    # )
+        verbose=0,
+        depth = 5
+    )
 
-    # print(model_stats)
-    # wandb_logger.experiment.log({"model_summary": str(model_stats)})
+    print(model_stats)
+    wandb_logger.experiment.log({"model_summary": str(model_stats)})
 
     lightning_module.model = torch.compile(lightning_module.model, compile_mode)
     trainer = Trainer(
         logger=wandb_logger,                 # Connecte WandB
-        callbacks=[checkpoint_callback, lr_monitor], #bio_eval_callback, early_stop_callback], # Connecte la sauvegarde et le moniteur de LR
+        callbacks=[checkpoint_callback, lr_monitor, bio_eval_callback, early_stop_callback]
         max_epochs=num_epochs,
-        accelerator="gpu",                  # Choisit GPU/CPU tout seul
+        accelerator="gpu",                 
         devices=1,
         precision = "bf16-mixed",
-        log_every_n_steps=10,                # Fréquence de log pour WandB
+        log_every_n_steps=10,             
         val_check_interval=1.0,
     )
     logger.info("Starting training...")

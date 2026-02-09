@@ -68,7 +68,7 @@ Le modèle repose sur une architecture **Encoder-Decoder** asymétrique :
 
 ## ✅ Best Practices Identifiées / leçons retenues
 
-* **Lightning:** J'ai découvert la libraire lightning pytorch pendant le projet et je la trouve très puissante
+* **Lightning et wandb:** J'ai découvert la libraire lightning pytorch pendant le projet et je la trouve très puissante. J'ai aussi découvert weights and bias pour log les entraînement, c'est très pratique !
 * **Pytorch compile:** Quand on commence à empiler beaucoup de blocs dans l'architectures et que le modèle devient gros, la compilation torch permet un gain significatif de temps d'entraînement
 * **Overfit on 1 Batch :** Ne jamais lancer un training long sans avoir vérifié que le modèle peut mémoriser 4 exemples par cœur.
 * **L'importance de l'informatique:** Pour une même architecture, le temps de calcul peut varier massivement en fonction d'à quel point celle-ci est optimisé niveau du code

@@ -7,9 +7,8 @@ from Bio.Seq import Seq
 from Bio.Align import PairwiseAligner
 from torch.utils.data import DataLoader, Dataset, random_split
 from dataset.finetuning.finetune_dataset import FinetuneDataset
-# Importe ta classe (assure-toi que les chemins sont bons)
 from model.processor import DNAProcessor 
-# Si DNAProcessor est dans un autre fichier, ajuste l'import ci-dessus
+
 
 def get_model_fingerprint(model):
     """Récupère un poids au hasard pour servir de signature."""
@@ -34,18 +33,16 @@ def get_amino_acid_identity(seq1, seq2):
     aligner.mode = 'global'
     
     try:
-        # C'est cette ligne qui peut crasher si les séquences sont trop différentes
         alignments = aligner.align(seq1, seq2)
-        
-        # Vérification de sécurité (liste vide)
+
         if not alignments:
             return 0.0
             
-        # On prend le premier alignement pour compter les identités
+
         alignment = alignments[0]
         matches = alignment.counts().identities
         
-        # Normalisation
+
         max_len = max(len(seq1), len(seq2))
         
         if max_len == 0: return 0.0
@@ -58,27 +55,23 @@ def get_amino_acid_identity(seq1, seq2):
         return 0.0
         
     except Exception as e:
-        # Filet de sécurité pour d'autres erreurs bizarres
         print(f"Warning alignment error: {e}")
         return 0.0
 
 
 def main():
-    # --- CONFIGURATION ---
-    CHECKPOINT_PATH = "checkpoints/dna_model_llamafied_finetune_causal_mask015.ckpt" # <--- METS TON CHEMIN ICI
-    # Si tu n'as pas de GPU dispo pour l'éval, mets "cpu"
+
+    CHECKPOINT_PATH = "checkpoints/dna_model_llamafied_finetune_causal_mask015.ckpt" 
     DEVICE = "cuda" 
     BATCH_SIZE = 8
     MAX_BATCHES = 1
     MAX_LEN = 1024
     print(f"🔄 Chargement du modèle depuis {CHECKPOINT_PATH}...")
     
-    # Chargement du modèle
-    # map_location est important si tu as entraîné sur GPU et évalues sur CPU
+
     model = DNAProcessor.load_from_checkpoint(CHECKPOINT_PATH, map_location=DEVICE)
     model.to(DEVICE)
 
-    # Affiche l'empreinte unique du modèle chargé
     print(f"🕵️ CHECKPOINT CHARGÉ : {CHECKPOINT_PATH}")
     print(f"🧬 EMPREINTE DU MODÈLE : {get_model_fingerprint(model):.9f}")
 
@@ -132,32 +125,29 @@ def main():
             sequence_tot += sequences
             prot_amino_tot += prot_amino
             count +=1
-# ... (ton code précédent s'arrête ici) ...
+
             
-            # 3. Boucle d'analyse séquence par séquence
+            # Boucle d'analyse séquence par séquence
         print(f"   🧬 Analyse du batch {count+1}...")
         
         for gen_dna, true_prot in zip(sequence_tot, prot_amino_tot):
             
-            # A. Calcul du GC Content
+            # Calcul du GC Content
             metrics["gc_content_gen"].append(calculate_gc_content(gen_dna))
             
-            # B. Traduction (ADN -> Protéine)
-            # On utilise Biopython. 
-            # table=11 est spécifique aux bactéries (E. Coli). 
-            # Utilise table=1 pour le code génétique standard si besoin.
+
             dna_obj = Seq(gen_dna)
             
             translated_prot = ""
             is_valid_orf = False
             
             try:
+                # Traduction (ADN -> Protéine)
+                # table=11 est spécifique aux bactéries (E. Coli). 
                 # to_stop=True : Arrête la traduction dès qu'un codon STOP est rencontré
                 # cds=False : Ne force pas le start codon (ATG), traduit tout tel quel
                 translated_prot = str(dna_obj.translate(table=11, to_stop=True))
                 
-                # Une séquence est considérée "valide" si elle a pu être traduite
-                # et qu'elle n'est pas vide
                 if len(translated_prot) > 0:
                     is_valid_orf = True
                     
@@ -168,7 +158,7 @@ def main():
 
             metrics["orf_validity"].append(1 if is_valid_orf else 0)
 
-            # C. Protein Recovery Rate (Comparaison Input vs Output Traduit)
+            # Protein Recovery Rate (Comparaison Input vs Output Traduit)
             # C'est ici qu'on vérifie si l'ADN généré recrée bien la protéine demandée
             if is_valid_orf:
                 recovery_score = get_amino_acid_identity(true_prot, translated_prot)
@@ -178,7 +168,6 @@ def main():
             metrics["protein_recovery"].append(recovery_score)
 
     
-    # --- 4. RAPPORT FINAL ET SAUVEGARDE ---
     print("\n" + "="*50)
     print("📊 RAPPORT D'ÉVALUATION DU MODÈLE")
     print("="*50)

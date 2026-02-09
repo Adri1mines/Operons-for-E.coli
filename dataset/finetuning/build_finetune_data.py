@@ -65,8 +65,6 @@ def main():
     gene_map = gene_df.set_index("GeneName").to_dict('index')
 
     # 3. PromoterSet (Position TSS)
-    # CRUCIAL : Il faut trouver la colonne "TSS Absolute Position" (Souvent col 4 ou 5)
-    # Regarde ton fichier : c'est la coordonnée absolue du +1
     prom_df = pd.read_csv(FILE_PATH_PROM, sep='\t', comment='#', header=None,
         usecols=[1, 3], # <--- ADAPTE L'INDEX 3 SELON TON FICHIER (Position)
         names=["PromoterName", "TSS_Position"]
